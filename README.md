@@ -1,6 +1,7 @@
 # Date Range Selector Card
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-yellow.svg)](https://www.buymeacoffee.com/prestodus)
 
 A custom Lovelace card for Home Assistant that provides an intuitive interface for selecting date ranges. Perfect for filtering historical data, setting report periods, or any scenario where you need to work with date ranges.
 

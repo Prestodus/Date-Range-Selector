@@ -90,12 +90,12 @@ dist/
 ## Configuration Options
 
 The card supports these configuration options:
-- `start_entity` (required): Entity ID for start date (input_datetime)
-- `end_entity` (required): Entity ID for end date (input_datetime)
+- `start_entity` (required): Entity ID for start date (input_datetime) - No default value in stub config
+- `end_entity` (required): Entity ID for end date (input_datetime) - No default value in stub config
 - `range_entity` (optional): Entity ID for storing range in days (input_number)
 - `offset_entity` (optional): Entity ID for storing offset in days from today (input_number)
 - `show_arrows` (optional, default: true): Show navigation arrows
-- `today_button_type` (optional, default: 'icon'): 'icon' or 'text'
+- `today_button_type` (optional, default: 'icon'): 'icon' or 'text' - When 'text', button label changes based on selected mode
 - `show_custom_range` (optional, default: false): Show custom button with modern date pickers
 - `hide_background` (optional, default: false): Remove card background, shadow, and border
 - `disable_future` (optional, default: false): Prevent future date selection
@@ -103,6 +103,14 @@ The card supports these configuration options:
 - `display_mode` (optional, default: 'default'): 'default' or 'compact'
 - `visible_range_modes` (optional, all true by default): Control which range buttons to show (day/week/month/year)
 - `default_range_mode` (optional): Default range mode selection ('day', 'week', 'month', 'year')
+
+### Dynamic "Today" Button
+The button that returns to the current period now adapts based on the selected mode:
+- In Day mode or Custom mode: Shows "Today"
+- In Week mode: Shows "This Week"
+- In Month mode: Shows "This Month"
+- In Year mode: Shows "This Year"
+This makes it clear that clicking the button will navigate to the current period in the active mode.
 
 ## Helper Integration and ApexCharts Support
 
@@ -140,20 +148,44 @@ This allows charts to automatically update their time range when the date select
 
 ### Adding a New Configuration Option
 1. Add the option to `DateRangeSelectorCardConfig` interface in `types.ts`
-2. Update `getStubConfig()` in the main component
+2. Update `getStubConfig()` in both the main component and editor (leave entity fields empty)
 3. Add UI controls in `editor.ts` using appropriate selectors:
-   - Use `ha-entity-picker` with `include-domains` for entity selection
-   - Use `ha-selector` for advanced entity selection with creation support
-   - Use `ha-formfield` and `ha-switch` for boolean options
+   - Use `ha-selector` for entity selection with creation support
+   - For boolean options, use a structured layout: label above, helper text, then checkbox with descriptive span
+   - Group related options under `<h3>` section headers
    - Use `mwc-button` for action buttons
 4. Implement the functionality in the main component
 5. Update README.md documentation
+6. Update these copilot instructions if the change is architecturally significant
+
+### Editor UI Organization
+The editor is organized into logical sections with headers:
+1. **Required Entities**: Start and End date entities
+2. **Range Mode Configuration**: Which modes are visible and default mode
+3. **Display Options**: Visual appearance settings (display mode, button types, checkboxes for features)
+4. **Date Constraints**: Future date and minimum date restrictions
+5. **Optional Helper Entities**: Range and offset entities for ApexCharts integration
+
+For boolean options, use the checkbox-config pattern:
+- Main label at the top
+- Helper text explaining the option
+- Checkbox with a descriptive span inside a checkbox-label
 
 ### Modifying Date Range Logic
 1. Use date-fns functions consistently
 2. Respect `disable_future` and `min_date` constraints
 3. Test edge cases (month boundaries, leap years, ISO weeks)
 4. Update navigation arrow disabled states accordingly
+5. **Important**: When navigating between periods, recalculate the full range instead of just shifting dates to avoid carrying over truncated ranges from disable_future constraints
+6. **Race Condition Prevention**: Use the `isUpdating` state to prevent concurrent updates when user rapidly clicks buttons
+
+### Preventing Race Conditions
+The card implements a locking mechanism to prevent issues when users rapidly interact with controls:
+1. An `isUpdating` state variable tracks if an entity update is in progress
+2. All interactive controls (buttons, date pickers) are disabled while `isUpdating` is true
+3. The `_setDateRange()` method checks if an update is in progress and returns early if so
+4. After all service calls complete, a 100ms timeout ensures Home Assistant has processed updates before re-enabling controls
+5. This prevents ranges from becoming corrupted when navigating quickly
 
 ### Styling Changes
 1. Use Home Assistant CSS custom properties:
@@ -171,8 +203,9 @@ This allows charts to automatically update their time range when the date select
 1. Use Home Assistant's native `ha-date-input` component for date selection
 2. Pass the `hass` object to date input components
 3. Handle date change events with `@value-changed` listener
-4. Format dates consistently using `format(date, 'yyyy-MM-dd')`
+4. Format dates consistently using `format(date, 'yyyy-MM-dd')` - not ISO strings
 5. Set `min` and `max` attributes based on `min_date` and `disable_future` settings
+6. Set `disabled` property to match `isUpdating` state to prevent race conditions
 
 ## Build and Release Process
 
