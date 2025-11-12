@@ -229,6 +229,24 @@ export class DateRangeSelectorEditor extends LitElement {
           </div>
         </div>
 
+        <!-- Show Custom Range -->
+        <div class="config-row checkbox-config">
+          <label for="show_custom_range">Show Custom Range Option</label>
+          <div class="helper-text">
+            Display a "Custom" button that reveals date pickers for manual selection
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="show_custom_range"
+              .configValue=${'show_custom_range'}
+              .checked=${this.config.show_custom_range === true}
+              @change=${this._valueChanged}
+            />
+            <span>Enable custom date range picker</span>
+          </label>
+        </div>
+
         <hr />
 
         <h3>Display Options</h3>
@@ -244,9 +262,10 @@ export class DateRangeSelectorEditor extends LitElement {
           >
             <option value="default">Default</option>
             <option value="compact">Compact</option>
+            <option value="in-header">In-Header (Ultra Compact)</option>
           </select>
           <div class="helper-text">
-            Choose between default and compact display modes
+            Choose between default, compact, and in-header display modes
           </div>
         </div>
 
@@ -282,24 +301,6 @@ export class DateRangeSelectorEditor extends LitElement {
               @change=${this._valueChanged}
             />
             <span>Enable navigation arrows</span>
-          </label>
-        </div>
-
-        <!-- Show Custom Range -->
-        <div class="config-row checkbox-config">
-          <label for="show_custom_range">Show Custom Range Option</label>
-          <div class="helper-text">
-            Display a "Custom" button that reveals date pickers for manual selection
-          </div>
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              id="show_custom_range"
-              .configValue=${'show_custom_range'}
-              .checked=${this.config.show_custom_range === true}
-              @change=${this._valueChanged}
-            />
-            <span>Enable custom date range picker</span>
           </label>
         </div>
 

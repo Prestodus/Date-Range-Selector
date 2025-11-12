@@ -100,6 +100,24 @@ function t(t,e,n,i){var r,a=arguments.length,o=a<3?e:null===i?i=Object.getOwnPro
           </div>
         </div>
 
+        <!-- Show Custom Range -->
+        <div class="config-row checkbox-config">
+          <label for="show_custom_range">Show Custom Range Option</label>
+          <div class="helper-text">
+            Display a "Custom" button that reveals date pickers for manual selection
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="show_custom_range"
+              .configValue=${"show_custom_range"}
+              .checked=${!0===this.config.show_custom_range}
+              @change=${this._valueChanged}
+            />
+            <span>Enable custom date range picker</span>
+          </label>
+        </div>
+
         <hr />
 
         <h3>Display Options</h3>
@@ -115,9 +133,10 @@ function t(t,e,n,i){var r,a=arguments.length,o=a<3?e:null===i?i=Object.getOwnPro
           >
             <option value="default">Default</option>
             <option value="compact">Compact</option>
+            <option value="in-header">In-Header (Ultra Compact)</option>
           </select>
           <div class="helper-text">
-            Choose between default and compact display modes
+            Choose between default, compact, and in-header display modes
           </div>
         </div>
 
@@ -153,24 +172,6 @@ function t(t,e,n,i){var r,a=arguments.length,o=a<3?e:null===i?i=Object.getOwnPro
               @change=${this._valueChanged}
             />
             <span>Enable navigation arrows</span>
-          </label>
-        </div>
-
-        <!-- Show Custom Range -->
-        <div class="config-row checkbox-config">
-          <label for="show_custom_range">Show Custom Range Option</label>
-          <div class="helper-text">
-            Display a "Custom" button that reveals date pickers for manual selection
-          </div>
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              id="show_custom_range"
-              .configValue=${"show_custom_range"}
-              .checked=${!0===this.config.show_custom_range}
-              @change=${this._valueChanged}
-            />
-            <span>Enable custom date range picker</span>
           </label>
         </div>
 
@@ -365,8 +366,8 @@ function t(t,e,n,i){var r,a=arguments.length,o=a<3?e:null===i?i=Object.getOwnPro
         color: var(--primary-text-color);
         font-weight: normal;
       }
-    `}};t([lt({attribute:!1})],Ue.prototype,"hass",void 0),t([dt()],Ue.prototype,"config",void 0),Ue=t([ot("date-range-selector-editor")],Ue);console.info("%c DATE-RANGE-SELECTOR-CARD %c v0.0.2 ","color: white; background: #0084ff; font-weight: 700;","color: #0084ff; background: white; font-weight: 700;");let Ne=class extends rt{constructor(){super(...arguments),this.selectedPreset="day",this.currentStartDate=wt(new Date),this.currentEndDate=Et(new Date),this.showCustomPickers=!1,this.isUpdating=!1}static getConfigElement(){return document.createElement("date-range-selector-editor")}static getStubConfig(){return{type:"custom:date-range-selector-card",start_entity:"",end_entity:"",show_arrows:!0,today_button_type:"icon"}}setConfig(t){if(!t.start_entity)throw new Error("You must define start_entity");if(!t.end_entity)throw new Error("You must define end_entity");this.config={show_arrows:!0,today_button_type:"icon",hide_background:!1,show_custom_range:!1,disable_future:!1,display_mode:"default",visible_range_modes:{day:!0,week:!0,month:!0,year:!0},...t};const e=this.config.visible_range_modes;e.day||e.week||e.month||e.year||(e.day=!0),this.config.default_range_mode&&this._isRangeModeVisible(this.config.default_range_mode)?this.selectedPreset=this.config.default_range_mode:e.day?this.selectedPreset="day":e.week?this.selectedPreset="week":e.month?this.selectedPreset="month":e.year&&(this.selectedPreset="year")}getCardSize(){return 3}updated(t){super.updated(t),t.has("hass")&&this.hass&&this._updateDatesFromEntities()}_updateDatesFromEntities(){if(!this.hass||!this.config)return;const t=this.hass.states[this.config.start_entity],e=this.hass.states[this.config.end_entity];if(t&&"unavailable"!==t.state&&"unknown"!==t.state)try{this.currentStartDate=ke(t.state)}catch(t){console.error("Error parsing start date:",t)}if(e&&"unavailable"!==e.state&&"unknown"!==e.state)try{this.currentEndDate=ke(e.state)}catch(t){console.error("Error parsing end date:",t)}}_handleToday(){const t=new Date,{start:e,end:n}=this._calculatePresetRange("custom"===this.selectedPreset?"day":this.selectedPreset,t);this._setDateRange(e,n)}_handlePreset(t){if("custom"===t)return this.showCustomPickers=!this.showCustomPickers,void(this.selectedPreset=t);this.selectedPreset=t,this.showCustomPickers=!1;const e=new Date,{start:n,end:i}=this._calculatePresetRange(t,e);this._setDateRange(n,i)}_handleNavigation(t){if("custom"===this.selectedPreset)return;const e="prev"===t?-1:1;let n;switch(this.selectedPreset){case"day":n=pt(this.currentStartDate,e);break;case"week":n=_t(this.currentStartDate,e);break;case"month":n=vt(this.currentStartDate,e);break;case"year":n=$t(this.currentStartDate,e);break;default:return}const{start:i,end:r}=this._calculatePresetRange(this.selectedPreset,n);this._setDateRange(i,r)}_calculatePresetRange(t,e){let n,i;switch(t){case"day":default:n=wt(e),i=Et(e);break;case"week":n=function(t,e){var n,i,r,a,o,s,l,d;gt(1,arguments);var c=bt(),u=ht(null!==(n=null!==(i=null!==(r=null!==(a=null==e?void 0:e.weekStartsOn)&&void 0!==a?a:null==e||null===(o=e.locale)||void 0===o||null===(s=o.options)||void 0===s?void 0:s.weekStartsOn)&&void 0!==r?r:c.weekStartsOn)&&void 0!==i?i:null===(l=c.locale)||void 0===l||null===(d=l.options)||void 0===d?void 0:d.weekStartsOn)&&void 0!==n?n:0);if(!(u>=0&&u<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var h=ft(t),g=h.getDay(),f=(g<u?7:0)+g-u;return h.setDate(h.getDate()-f),h.setHours(0,0,0,0),h}(e,{weekStartsOn:1}),i=function(t,e){var n,i,r,a,o,s,l,d;gt(1,arguments);var c=bt(),u=ht(null!==(n=null!==(i=null!==(r=null!==(a=null==e?void 0:e.weekStartsOn)&&void 0!==a?a:null==e||null===(o=e.locale)||void 0===o||null===(s=o.options)||void 0===s?void 0:s.weekStartsOn)&&void 0!==r?r:c.weekStartsOn)&&void 0!==i?i:null===(l=c.locale)||void 0===l||null===(d=l.options)||void 0===d?void 0:d.weekStartsOn)&&void 0!==n?n:0);if(!(u>=0&&u<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var h=ft(t),g=h.getDay(),f=6+(g<u?-7:0)-(g-u);return h.setDate(h.getDate()+f),h.setHours(23,59,59,999),h}(e,{weekStartsOn:1});break;case"month":n=function(t){gt(1,arguments);var e=ft(t);return e.setDate(1),e.setHours(0,0,0,0),e}(e),i=function(t){gt(1,arguments);var e=ft(t),n=e.getMonth();return e.setFullYear(e.getFullYear(),n+1,0),e.setHours(23,59,59,999),e}(e);break;case"year":n=function(t){gt(1,arguments);var e=ft(t),n=new Date(0);return n.setFullYear(e.getFullYear(),0,1),n.setHours(0,0,0,0),n}(e),i=function(t){gt(1,arguments);var e=ft(t),n=e.getFullYear();return e.setFullYear(n+1,0,0),e.setHours(23,59,59,999),e}(e)}return this._applyConstraints(n,i)}_applyConstraints(t,e){const n=Et(new Date);let i=t,r=e;if(this.config.min_date){const t=ke(this.config.min_date);$e(i,t)&&(i=t),$e(r,t)&&(r=t)}return this.config.disable_future&&(_e(r,n)&&(r=n),_e(i,n)&&(i=n)),{start:i,end:r}}_canNavigatePrev(){if("custom"===this.selectedPreset)return!1;if(!this.config.min_date)return!0;const t=ke(this.config.min_date);let e;switch(this.selectedPreset){case"day":e=pt(this.currentStartDate,-1);break;case"week":e=_t(this.currentStartDate,-1);break;case"month":e=vt(this.currentStartDate,-1);break;case"year":e=$t(this.currentStartDate,-1);break;default:return!0}return!$e(e,t)}_canNavigateNext(){if("custom"===this.selectedPreset)return!1;if(!this.config.disable_future)return!0;const t=new Date;let e;switch(this.selectedPreset){case"day":e=pt(this.currentEndDate,1);break;case"week":e=_t(this.currentEndDate,1);break;case"month":e=vt(this.currentEndDate,1);break;case"year":e=$t(this.currentEndDate,1);break;default:return!0}return!_e(e,t)}_isRangeModeVisible(t){return"custom"===t?!0===this.config.show_custom_range:!1!==this.config.visible_range_modes?.[t]}_getVisibleRangeModes(){const t=[];return this._isRangeModeVisible("day")&&t.push("day"),this._isRangeModeVisible("week")&&t.push("week"),this._isRangeModeVisible("month")&&t.push("month"),this._isRangeModeVisible("year")&&t.push("year"),t}_shouldShowRangeButton(t){if(!this._isRangeModeVisible(t))return!1;if(!this.config.show_custom_range){if(1===this._getVisibleRangeModes().length)return!1}return!0}async _setDateRange(t,e){if(this.isUpdating)return;this.isUpdating=!0,this.currentStartDate=t,this.currentEndDate=e;const n=we(t,"yyyy-MM-dd"),i=we(e,"yyyy-MM-dd");try{if(await this.hass.callService("input_datetime","set_datetime",{entity_id:this.config.start_entity,date:n}),await this.hass.callService("input_datetime","set_datetime",{entity_id:this.config.end_entity,date:i}),this.config.range_entity){const n=St(e,t)+1;await this.hass.callService("input_number","set_value",{entity_id:this.config.range_entity,value:n})}if(this.config.offset_entity){const e=St(t,wt(new Date));await this.hass.callService("input_number","set_value",{entity_id:this.config.offset_entity,value:e})}}catch(t){console.error("Error setting date range:",t)}finally{setTimeout(()=>{this.isUpdating=!1},100)}}_handleCustomStartChange(t){const e=t.detail.value;if(e){const t=ke(e);let n=this.currentEndDate;_e(t,this.currentEndDate)&&(n=t),this._setDateRange(t,n)}}_handleCustomEndChange(t){const e=t.detail.value;if(e){const t=ke(e);this._setDateRange(this.currentStartDate,t)}}_getTodayButtonLabel(){switch(this.selectedPreset){case"day":case"custom":default:return"Today";case"week":return"This Week";case"month":return"This Month";case"year":return"This Year"}}_formatDateRange(){try{const t=we(this.currentStartDate,"MMMM d, yyyy"),e=we(this.currentEndDate,"MMMM d, yyyy");return t===e?t:`${t} - ${e}`}catch(t){return"Invalid date range"}}render(){if(!this.config||!this.hass)return Y``;const t=this.config.hide_background?"no-background":"",e="compact"===this.config.display_mode;return Y`
-      <ha-card class="${t} ${e?"compact-mode":""}">
+    `}};t([lt({attribute:!1})],Ue.prototype,"hass",void 0),t([dt()],Ue.prototype,"config",void 0),Ue=t([ot("date-range-selector-editor")],Ue);console.info("%c DATE-RANGE-SELECTOR-CARD %c v0.0.2 ","color: white; background: #0084ff; font-weight: 700;","color: #0084ff; background: white; font-weight: 700;");let Ne=class extends rt{constructor(){super(...arguments),this.selectedPreset="day",this.currentStartDate=wt(new Date),this.currentEndDate=Et(new Date),this.showCustomPickers=!1,this.isUpdating=!1}static getConfigElement(){return document.createElement("date-range-selector-editor")}static getStubConfig(){return{type:"custom:date-range-selector-card",start_entity:"",end_entity:"",show_arrows:!0,today_button_type:"icon"}}setConfig(t){if(!t.start_entity)throw new Error("You must define start_entity");if(!t.end_entity)throw new Error("You must define end_entity");this.config={show_arrows:!0,today_button_type:"icon",hide_background:!1,show_custom_range:!1,disable_future:!1,display_mode:"default",visible_range_modes:{day:!0,week:!0,month:!0,year:!0},...t};const e=this.config.visible_range_modes;e.day||e.week||e.month||e.year||(e.day=!0),this.config.default_range_mode&&this._isRangeModeVisible(this.config.default_range_mode)?this.selectedPreset=this.config.default_range_mode:e.day?this.selectedPreset="day":e.week?this.selectedPreset="week":e.month?this.selectedPreset="month":e.year&&(this.selectedPreset="year")}getCardSize(){return 3}updated(t){super.updated(t),t.has("hass")&&this.hass&&this._updateDatesFromEntities()}_updateDatesFromEntities(){if(!this.hass||!this.config)return;const t=this.hass.states[this.config.start_entity],e=this.hass.states[this.config.end_entity];if(t&&"unavailable"!==t.state&&"unknown"!==t.state)try{this.currentStartDate=ke(t.state)}catch(t){console.error("Error parsing start date:",t)}if(e&&"unavailable"!==e.state&&"unknown"!==e.state)try{this.currentEndDate=ke(e.state)}catch(t){console.error("Error parsing end date:",t)}}_handleToday(){const t=new Date;"custom"===this.selectedPreset&&(this.selectedPreset="day",this.showCustomPickers=!1);const{start:e,end:n}=this._calculatePresetRange(this.selectedPreset,t);this._setDateRange(e,n)}_handlePreset(t){if("custom"===t)return this.showCustomPickers=!this.showCustomPickers,void(this.selectedPreset=t);this.selectedPreset=t,this.showCustomPickers=!1;const e=new Date,{start:n,end:i}=this._calculatePresetRange(t,e);this._setDateRange(n,i)}_handleNavigation(t){if("custom"===this.selectedPreset)return;const e="prev"===t?-1:1;let n;switch(this.selectedPreset){case"day":n=pt(this.currentStartDate,e);break;case"week":n=_t(this.currentStartDate,e);break;case"month":n=vt(this.currentStartDate,e);break;case"year":n=$t(this.currentStartDate,e);break;default:return}const{start:i,end:r}=this._calculatePresetRange(this.selectedPreset,n);this._setDateRange(i,r)}_calculatePresetRange(t,e){let n,i;switch(t){case"day":default:n=wt(e),i=Et(e);break;case"week":n=function(t,e){var n,i,r,a,o,s,l,d;gt(1,arguments);var c=bt(),u=ht(null!==(n=null!==(i=null!==(r=null!==(a=null==e?void 0:e.weekStartsOn)&&void 0!==a?a:null==e||null===(o=e.locale)||void 0===o||null===(s=o.options)||void 0===s?void 0:s.weekStartsOn)&&void 0!==r?r:c.weekStartsOn)&&void 0!==i?i:null===(l=c.locale)||void 0===l||null===(d=l.options)||void 0===d?void 0:d.weekStartsOn)&&void 0!==n?n:0);if(!(u>=0&&u<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var h=ft(t),g=h.getDay(),f=(g<u?7:0)+g-u;return h.setDate(h.getDate()-f),h.setHours(0,0,0,0),h}(e,{weekStartsOn:1}),i=function(t,e){var n,i,r,a,o,s,l,d;gt(1,arguments);var c=bt(),u=ht(null!==(n=null!==(i=null!==(r=null!==(a=null==e?void 0:e.weekStartsOn)&&void 0!==a?a:null==e||null===(o=e.locale)||void 0===o||null===(s=o.options)||void 0===s?void 0:s.weekStartsOn)&&void 0!==r?r:c.weekStartsOn)&&void 0!==i?i:null===(l=c.locale)||void 0===l||null===(d=l.options)||void 0===d?void 0:d.weekStartsOn)&&void 0!==n?n:0);if(!(u>=0&&u<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var h=ft(t),g=h.getDay(),f=6+(g<u?-7:0)-(g-u);return h.setDate(h.getDate()+f),h.setHours(23,59,59,999),h}(e,{weekStartsOn:1});break;case"month":n=function(t){gt(1,arguments);var e=ft(t);return e.setDate(1),e.setHours(0,0,0,0),e}(e),i=function(t){gt(1,arguments);var e=ft(t),n=e.getMonth();return e.setFullYear(e.getFullYear(),n+1,0),e.setHours(23,59,59,999),e}(e);break;case"year":n=function(t){gt(1,arguments);var e=ft(t),n=new Date(0);return n.setFullYear(e.getFullYear(),0,1),n.setHours(0,0,0,0),n}(e),i=function(t){gt(1,arguments);var e=ft(t),n=e.getFullYear();return e.setFullYear(n+1,0,0),e.setHours(23,59,59,999),e}(e)}return this._applyConstraints(n,i)}_applyConstraints(t,e){const n=Et(new Date);let i=t,r=e;if(this.config.min_date){const t=ke(this.config.min_date);$e(i,t)&&(i=t),$e(r,t)&&(r=t)}return this.config.disable_future&&(_e(r,n)&&(r=n),_e(i,n)&&(i=n)),{start:i,end:r}}_canNavigatePrev(){if("custom"===this.selectedPreset)return!1;if(!this.config.min_date)return!0;const t=ke(this.config.min_date);let e;switch(this.selectedPreset){case"day":e=pt(this.currentStartDate,-1);break;case"week":e=_t(this.currentStartDate,-1);break;case"month":e=vt(this.currentStartDate,-1);break;case"year":e=$t(this.currentStartDate,-1);break;default:return!0}return!$e(e,t)}_canNavigateNext(){if("custom"===this.selectedPreset)return!1;if(!this.config.disable_future)return!0;const t=new Date;let e;switch(this.selectedPreset){case"day":e=pt(this.currentEndDate,1);break;case"week":e=_t(this.currentEndDate,1);break;case"month":e=vt(this.currentEndDate,1);break;case"year":e=$t(this.currentEndDate,1);break;default:return!0}return!_e(e,t)}_isRangeModeVisible(t){return"custom"===t?!0===this.config.show_custom_range:!1!==this.config.visible_range_modes?.[t]}_getVisibleRangeModes(){const t=[];return this._isRangeModeVisible("day")&&t.push("day"),this._isRangeModeVisible("week")&&t.push("week"),this._isRangeModeVisible("month")&&t.push("month"),this._isRangeModeVisible("year")&&t.push("year"),t}_shouldShowRangeButton(t){if(!this._isRangeModeVisible(t))return!1;if(!this.config.show_custom_range){if(1===this._getVisibleRangeModes().length)return!1}return!0}async _setDateRange(t,e){if(this.isUpdating)return;this.isUpdating=!0,this.currentStartDate=t,this.currentEndDate=e;const n=we(t,"yyyy-MM-dd"),i=we(e,"yyyy-MM-dd");try{if(await this.hass.callService("input_datetime","set_datetime",{entity_id:this.config.start_entity,date:n}),await this.hass.callService("input_datetime","set_datetime",{entity_id:this.config.end_entity,date:i}),this.config.range_entity){const n=St(e,t)+1;await this.hass.callService("input_number","set_value",{entity_id:this.config.range_entity,value:n})}if(this.config.offset_entity){const e=St(t,wt(new Date));await this.hass.callService("input_number","set_value",{entity_id:this.config.offset_entity,value:e})}}catch(t){console.error("Error setting date range:",t)}finally{setTimeout(()=>{this.isUpdating=!1},100)}}_handleCustomStartChange(t){const e=t.detail.value;if(e){const t=ke(e);let n=this.currentEndDate;_e(t,this.currentEndDate)&&(n=t),this._setDateRange(t,n)}}_handleCustomEndChange(t){const e=t.detail.value;if(e){const t=ke(e);this._setDateRange(this.currentStartDate,t)}}_getTodayButtonLabel(){switch(this.selectedPreset){case"day":case"custom":default:return"Today";case"week":return"This Week";case"month":return"This Month";case"year":return"This Year"}}_formatDateRange(){try{const t=we(this.currentStartDate,"MMMM d, yyyy"),e=we(this.currentEndDate,"MMMM d, yyyy");return t===e?t:`${t} - ${e}`}catch(t){return"Invalid date range"}}render(){if(!this.config||!this.hass)return Y``;const t=this.config.hide_background?"no-background":"",e="compact"===this.config.display_mode,n="in-header"===this.config.display_mode;return Y`
+      <ha-card class="${t} ${e?"compact-mode":""} ${n?"in-header-mode":""}">
         <div class="card-content">
           <!-- Date Range Display -->
           ${e?"":Y`
@@ -556,6 +557,33 @@ function t(t,e,n,i){var r,a=arguments.length,o=a<3?e:null===i?i=Object.getOwnPro
         min-width: 36px;
       }
 
+      ha-card.in-header-mode {
+        padding: 0;
+      }
+
+      ha-card.in-header-mode .card-content {
+        gap: 0;
+      }
+
+      ha-card.in-header-mode .button-row {
+        gap: 2px;
+      }
+
+      ha-card.in-header-mode .preset-button,
+      ha-card.in-header-mode .nav-button {
+        padding: 4px 8px;
+        font-size: 11px;
+        min-width: 32px;
+      }
+
+      ha-card.in-header-mode .date-range-display {
+        display: none;
+      }
+
+      ha-card.in-header-mode .date-range-display.compact {
+        display: none;
+      }
+
       .button-row {
         display: flex;
         gap: 8px;
@@ -642,6 +670,20 @@ function t(t,e,n,i){var r,a=arguments.length,o=a<3?e:null===i?i=Object.getOwnPro
       .picker-group ha-date-input {
         padding: 0;
         border: none;
+      }
+
+      ha-card.compact-mode .custom-range-pickers {
+        gap: 8px;
+        padding: 8px;
+      }
+
+      ha-card.no-background .custom-range-pickers {
+        background: transparent;
+      }
+
+      ha-card.in-header-mode .custom-range-pickers {
+        gap: 4px;
+        padding: 4px;
       }
 
       @media (max-width: 600px) {

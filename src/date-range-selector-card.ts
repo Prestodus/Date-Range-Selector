@@ -139,8 +139,14 @@ export class DateRangeSelectorCard extends LitElement {
   private _handleToday(): void {
     const today = new Date();
     
+    // If in custom mode, reset to day mode
+    if (this.selectedPreset === 'custom') {
+      this.selectedPreset = 'day';
+      this.showCustomPickers = false;
+    }
+    
     // Calculate range based on current mode
-    const { start, end } = this._calculatePresetRange(this.selectedPreset === 'custom' ? 'day' : this.selectedPreset, today);
+    const { start, end } = this._calculatePresetRange(this.selectedPreset, today);
     this._setDateRange(start, end);
   }
 
@@ -442,9 +448,10 @@ export class DateRangeSelectorCard extends LitElement {
 
     const cardClass = this.config.hide_background ? 'no-background' : '';
     const compactMode = this.config.display_mode === 'compact';
+    const inHeaderMode = this.config.display_mode === 'in-header';
 
     return html`
-      <ha-card class="${cardClass} ${compactMode ? 'compact-mode' : ''}">
+      <ha-card class="${cardClass} ${compactMode ? 'compact-mode' : ''} ${inHeaderMode ? 'in-header-mode' : ''}">
         <div class="card-content">
           <!-- Date Range Display -->
           ${!compactMode ? html`
@@ -656,6 +663,33 @@ export class DateRangeSelectorCard extends LitElement {
         min-width: 36px;
       }
 
+      ha-card.in-header-mode {
+        padding: 0;
+      }
+
+      ha-card.in-header-mode .card-content {
+        gap: 0;
+      }
+
+      ha-card.in-header-mode .button-row {
+        gap: 2px;
+      }
+
+      ha-card.in-header-mode .preset-button,
+      ha-card.in-header-mode .nav-button {
+        padding: 4px 8px;
+        font-size: 11px;
+        min-width: 32px;
+      }
+
+      ha-card.in-header-mode .date-range-display {
+        display: none;
+      }
+
+      ha-card.in-header-mode .date-range-display.compact {
+        display: none;
+      }
+
       .button-row {
         display: flex;
         gap: 8px;
@@ -742,6 +776,20 @@ export class DateRangeSelectorCard extends LitElement {
       .picker-group ha-date-input {
         padding: 0;
         border: none;
+      }
+
+      ha-card.compact-mode .custom-range-pickers {
+        gap: 8px;
+        padding: 8px;
+      }
+
+      ha-card.no-background .custom-range-pickers {
+        background: transparent;
+      }
+
+      ha-card.in-header-mode .custom-range-pickers {
+        gap: 4px;
+        padding: 4px;
       }
 
       @media (max-width: 600px) {
