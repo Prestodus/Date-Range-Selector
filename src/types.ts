@@ -7,10 +7,12 @@ export interface DateRangeSelectorCardConfig extends Record<string, any> {
   show_arrows?: boolean;
   today_button_type?: 'icon' | 'text';
   hide_background?: boolean;
+  hide_date_display?: boolean;
+  date_display_position?: 'above' | 'below';
   show_custom_range?: boolean;
   disable_future?: boolean;
   min_date?: string;
-  display_mode?: 'default' | 'compact'; // New: display mode
+  display_mode?: 'default' | 'compact' | 'in-header'; // New: display mode
   visible_range_modes?: RangeModeVisibility; // New: which range modes to show
   default_range_mode?: PresetType; // New: default range mode selection
 }

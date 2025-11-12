@@ -229,6 +229,24 @@ export class DateRangeSelectorEditor extends LitElement {
           </div>
         </div>
 
+        <!-- Show Custom Range -->
+        <div class="config-row checkbox-config">
+          <label for="show_custom_range">Show Custom Range Option</label>
+          <div class="helper-text">
+            Display a "Custom" button that reveals date pickers for manual selection
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="show_custom_range"
+              .configValue=${'show_custom_range'}
+              .checked=${this.config.show_custom_range === true}
+              @change=${this._valueChanged}
+            />
+            <span>Enable custom date range picker</span>
+          </label>
+        </div>
+
         <hr />
 
         <h3>Display Options</h3>
@@ -244,9 +262,10 @@ export class DateRangeSelectorEditor extends LitElement {
           >
             <option value="default">Default</option>
             <option value="compact">Compact</option>
+            <option value="in-header">In-Header (Ultra Compact)</option>
           </select>
           <div class="helper-text">
-            Choose between default and compact display modes
+            Choose between default, compact, and in-header display modes
           </div>
         </div>
 
@@ -285,24 +304,6 @@ export class DateRangeSelectorEditor extends LitElement {
           </label>
         </div>
 
-        <!-- Show Custom Range -->
-        <div class="config-row checkbox-config">
-          <label for="show_custom_range">Show Custom Range Option</label>
-          <div class="helper-text">
-            Display a "Custom" button that reveals date pickers for manual selection
-          </div>
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              id="show_custom_range"
-              .configValue=${'show_custom_range'}
-              .checked=${this.config.show_custom_range === true}
-              @change=${this._valueChanged}
-            />
-            <span>Enable custom date range picker</span>
-          </label>
-        </div>
-
         <!-- Hide Background -->
         <div class="config-row checkbox-config">
           <label for="hide_background">Hide Card Background</label>
@@ -319,6 +320,41 @@ export class DateRangeSelectorEditor extends LitElement {
             />
             <span>Hide card background</span>
           </label>
+        </div>
+
+        <!-- Hide Date Display -->
+        <div class="config-row checkbox-config">
+          <label for="hide_date_display">Hide Date Display</label>
+          <div class="helper-text">
+            Hide the date range display to show dates elsewhere in your dashboard
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="hide_date_display"
+              .configValue=${'hide_date_display'}
+              .checked=${this.config.hide_date_display === true}
+              @change=${this._valueChanged}
+            />
+            <span>Hide date range display</span>
+          </label>
+        </div>
+
+        <!-- Date Display Position -->
+        <div class="config-row">
+          <label for="date_display_position">Date Display Position</label>
+          <select
+            id="date_display_position"
+            .configValue=${'date_display_position'}
+            .value=${this.config.date_display_position || 'above'}
+            @change=${this._valueChanged}
+          >
+            <option value="above">Above Buttons</option>
+            <option value="below">Below Buttons</option>
+          </select>
+          <div class="helper-text">
+            Position of the date range display relative to the selector buttons
+          </div>
         </div>
 
         <hr />

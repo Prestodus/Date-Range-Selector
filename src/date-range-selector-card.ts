@@ -69,6 +69,8 @@ export class DateRangeSelectorCard extends LitElement {
       show_arrows: true,
       today_button_type: 'icon',
       hide_background: false,
+      hide_date_display: false,
+      date_display_position: 'above',
       show_custom_range: false,
       disable_future: false,
       display_mode: 'default',
@@ -139,8 +141,14 @@ export class DateRangeSelectorCard extends LitElement {
   private _handleToday(): void {
     const today = new Date();
     
+    // If in custom mode, reset to day mode
+    if (this.selectedPreset === 'custom') {
+      this.selectedPreset = 'day';
+      this.showCustomPickers = false;
+    }
+    
     // Calculate range based on current mode
-    const { start, end } = this._calculatePresetRange(this.selectedPreset === 'custom' ? 'day' : this.selectedPreset, today);
+    const { start, end } = this._calculatePresetRange(this.selectedPreset, today);
     this._setDateRange(start, end);
   }
 
@@ -442,16 +450,34 @@ export class DateRangeSelectorCard extends LitElement {
 
     const cardClass = this.config.hide_background ? 'no-background' : '';
     const compactMode = this.config.display_mode === 'compact';
+    const inHeaderMode = this.config.display_mode === 'in-header';
+    const showDateDisplay = !this.config.hide_date_display;
+    const datePosition = this.config.date_display_position || 'above';
+
+    // Render date display template
+    const renderDateDisplay = () => {
+      if (!showDateDisplay) return '';
+      
+      if (compactMode) {
+        return html`
+          <div class="date-range-display compact">
+            ${this._formatDateRange()}
+          </div>
+        `;
+      }
+      
+      return html`
+        <div class="date-range-display">
+          ${this._formatDateRange()}
+        </div>
+      `;
+    };
 
     return html`
-      <ha-card class="${cardClass} ${compactMode ? 'compact-mode' : ''}">
+      <ha-card class="${cardClass} ${compactMode ? 'compact-mode' : ''} ${inHeaderMode ? 'in-header-mode' : ''}">
         <div class="card-content">
-          <!-- Date Range Display -->
-          ${!compactMode ? html`
-            <div class="date-range-display">
-              ${this._formatDateRange()}
-            </div>
-          ` : ''}
+          <!-- Date Range Display (Above) -->
+          ${datePosition === 'above' ? renderDateDisplay() : ''}
 
           <!-- Preset Buttons Row -->
           <div class="button-row">
@@ -553,11 +579,8 @@ export class DateRangeSelectorCard extends LitElement {
               : ''}
           </div>
 
-          ${compactMode ? html`
-            <div class="date-range-display compact">
-              ${this._formatDateRange()}
-            </div>
-          ` : ''}
+          <!-- Date Range Display (Below) -->
+          ${datePosition === 'below' ? renderDateDisplay() : ''}
 
           <!-- Custom Date Pickers -->
           ${this.showCustomPickers
@@ -656,6 +679,25 @@ export class DateRangeSelectorCard extends LitElement {
         min-width: 36px;
       }
 
+      ha-card.in-header-mode {
+        padding: 0;
+      }
+
+      ha-card.in-header-mode .card-content {
+        gap: 0;
+      }
+
+      ha-card.in-header-mode .button-row {
+        gap: 2px;
+      }
+
+      ha-card.in-header-mode .preset-button,
+      ha-card.in-header-mode .nav-button {
+        padding: 4px 8px;
+        font-size: 11px;
+        min-width: 32px;
+      }
+
       .button-row {
         display: flex;
         gap: 8px;
@@ -742,6 +784,20 @@ export class DateRangeSelectorCard extends LitElement {
       .picker-group ha-date-input {
         padding: 0;
         border: none;
+      }
+
+      ha-card.compact-mode .custom-range-pickers {
+        gap: 8px;
+        padding: 8px;
+      }
+
+      ha-card.no-background .custom-range-pickers {
+        background: transparent;
+      }
+
+      ha-card.in-header-mode .custom-range-pickers {
+        gap: 4px;
+        padding: 4px;
       }
 
       @media (max-width: 600px) {
