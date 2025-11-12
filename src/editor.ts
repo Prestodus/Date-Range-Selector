@@ -2,6 +2,16 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { DateRangeSelectorCardConfig, HomeAssistant } from './types';
 
+// Load HA components
+const loadHaComponents = async () => {
+  if (customElements.get('ha-selector')) return;
+  const helpers = await (window as any).loadCardHelpers?.();
+  if (!helpers) return;
+  const card = await helpers.createCardElement({ type: 'entity' });
+  if (!card) return;
+  await card.getConfigElement();
+};
+
 @customElement('date-range-selector-editor')
 export class DateRangeSelectorEditor extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
@@ -9,6 +19,11 @@ export class DateRangeSelectorEditor extends LitElement {
 
   public setConfig(config: DateRangeSelectorCardConfig): void {
     this.config = config;
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    loadHaComponents();
   }
 
   public static getStubConfig(): DateRangeSelectorCardConfig {
@@ -53,6 +68,54 @@ export class DateRangeSelectorEditor extends LitElement {
     this.dispatchEvent(event);
   }
 
+  private _rangeModeChanged(ev: CustomEvent): void {
+    if (!this.config || !this.hass) {
+      return;
+    }
+
+    const target = ev.target as any;
+    const mode = target.dataset.mode;
+
+    if (!mode) {
+      return;
+    }
+
+    const newConfig: DateRangeSelectorCardConfig = {
+      ...this.config,
+      visible_range_modes: {
+        ...this.config.visible_range_modes,
+        [mode]: target.checked,
+      },
+    };
+
+    const event = new CustomEvent('config-changed', {
+      detail: { config: newConfig },
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
+  }
+
+  private _entityChanged(ev: CustomEvent, configKey: string): void {
+    if (!this.config || !this.hass) {
+      return;
+    }
+
+    const value = ev.detail.value;
+    
+    const newConfig: DateRangeSelectorCardConfig = {
+      ...this.config,
+      [configKey]: value || '',
+    };
+
+    const event = new CustomEvent('config-changed', {
+      detail: { config: newConfig },
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
+  }
+
   protected render() {
     if (!this.hass || !this.config) {
       return html``;
@@ -63,32 +126,28 @@ export class DateRangeSelectorEditor extends LitElement {
         <!-- Start Entity -->
         <div class="config-row">
           <label for="start_entity">Start Entity (Required)</label>
-          <input
-            type="text"
-            id="start_entity"
-            .configValue=${'start_entity'}
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{ entity: { domain: ['input_datetime'] } }}
             .value=${this.config.start_entity || ''}
-            @input=${this._valueChanged}
-            placeholder="input_datetime.date_range_start"
-          />
+            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'start_entity')}
+          ></ha-selector>
           <div class="helper-text">
-            Entity ID for the start date (must be an input_datetime helper)
+            Entity for the start date (must be an input_datetime helper)
           </div>
         </div>
 
         <!-- End Entity -->
         <div class="config-row">
           <label for="end_entity">End Entity (Required)</label>
-          <input
-            type="text"
-            id="end_entity"
-            .configValue=${'end_entity'}
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{ entity: { domain: ['input_datetime'] } }}
             .value=${this.config.end_entity || ''}
-            @input=${this._valueChanged}
-            placeholder="input_datetime.date_range_end"
-          />
+            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'end_entity')}
+          ></ha-selector>
           <div class="helper-text">
-            Entity ID for the end date (must be an input_datetime helper)
+            Entity for the end date (must be an input_datetime helper)
           </div>
         </div>
 
@@ -187,6 +246,121 @@ export class DateRangeSelectorEditor extends LitElement {
             Earliest selectable date (YYYY-MM-DD format). Leave empty for no limit.
           </div>
         </div>
+
+        <hr />
+
+        <!-- Range Entity -->
+        <div class="config-row">
+          <label for="range_entity">Range Helper Entity (Optional)</label>
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{ entity: { domain: ['input_number'] } }}
+            .value=${this.config.range_entity || ''}
+            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'range_entity')}
+          ></ha-selector>
+          <div class="helper-text">
+            Entity for storing the range in days (must be an input_number helper). Useful for apex-charts.
+          </div>
+        </div>
+
+        <!-- Offset Entity -->
+        <div class="config-row">
+          <label for="offset_entity">Offset Helper Entity (Optional)</label>
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{ entity: { domain: ['input_number'] } }}
+            .value=${this.config.offset_entity || ''}
+            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'offset_entity')}
+          ></ha-selector>
+          <div class="helper-text">
+            Entity for storing offset in days from today to start date (must be an input_number helper). 0 = today, -7 = 7 days ago.
+          </div>
+        </div>
+
+        <hr />
+
+        <!-- Display Mode -->
+        <div class="config-row">
+          <label for="display_mode">Display Mode</label>
+          <select
+            id="display_mode"
+            .configValue=${'display_mode'}
+            .value=${this.config.display_mode || 'default'}
+            @change=${this._valueChanged}
+          >
+            <option value="default">Default</option>
+            <option value="compact">Compact</option>
+          </select>
+          <div class="helper-text">
+            Choose between default and compact display modes
+          </div>
+        </div>
+
+        <!-- Visible Range Modes -->
+        <div class="config-row">
+          <label>Visible Range Modes</label>
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                data-mode="day"
+                .checked=${this.config.visible_range_modes?.day !== false}
+                @change=${this._rangeModeChanged}
+              />
+              <span>Day</span>
+            </label>
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                data-mode="week"
+                .checked=${this.config.visible_range_modes?.week !== false}
+                @change=${this._rangeModeChanged}
+              />
+              <span>Week</span>
+            </label>
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                data-mode="month"
+                .checked=${this.config.visible_range_modes?.month !== false}
+                @change=${this._rangeModeChanged}
+              />
+              <span>Month</span>
+            </label>
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                data-mode="year"
+                .checked=${this.config.visible_range_modes?.year !== false}
+                @change=${this._rangeModeChanged}
+              />
+              <span>Year</span>
+            </label>
+          </div>
+          <div class="helper-text">
+            Choose which range mode buttons to display (at least one must be active)
+          </div>
+        </div>
+
+        <!-- Default Range Mode -->
+        <div class="config-row">
+          <label for="default_range_mode">Default Range Mode</label>
+          <select
+            id="default_range_mode"
+            .configValue=${'default_range_mode'}
+            .value=${this.config.default_range_mode || ''}
+            @change=${this._valueChanged}
+          >
+            <option value="">Auto (Smallest Visible)</option>
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+            <option value="year">Year</option>
+          </select>
+          <div class="helper-text">
+            Default range mode to select on load (defaults to smallest visible if not set)
+          </div>
+        </div>
       </div>
     `;
   }
@@ -224,7 +398,8 @@ export class DateRangeSelectorEditor extends LitElement {
 
       input[type='text'],
       input[type='date'],
-      select {
+      select,
+      ha-selector {
         width: 100%;
         padding: 10px;
         border: 1px solid var(--divider-color, #e0e0e0);
@@ -234,6 +409,11 @@ export class DateRangeSelectorEditor extends LitElement {
         font-size: 14px;
         font-family: inherit;
         box-sizing: border-box;
+      }
+
+      ha-selector {
+        padding: 0;
+        border: none;
       }
 
       input[type='text']:focus,
@@ -264,6 +444,33 @@ export class DateRangeSelectorEditor extends LitElement {
 
       select {
         cursor: pointer;
+      }
+
+      .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+        background: var(--secondary-background-color, #f5f5f5);
+        border-radius: 4px;
+      }
+
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .checkbox-label input[type='checkbox'] {
+        width: auto;
+        height: auto;
+        margin: 0;
+      }
+
+      .checkbox-label span {
+        color: var(--primary-text-color);
       }
     `;
   }
