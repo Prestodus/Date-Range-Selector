@@ -7,11 +7,16 @@ A custom Lovelace card for Home Assistant that provides an intuitive interface f
 ## Features
 
 - 🎯 **Preset Date Ranges**: Quick access to Day, Week, Month, and Year ranges
-- 📅 **Custom Range Selection**: Optional date pickers for manual date selection
+- 📅 **Modern Date Pickers**: Beautiful popup date pickers using Home Assistant's native components
+- 🔧 **Helper Integration**: Automatic updates for range (days) and offset helper entities
+- 📊 **ApexCharts Ready**: Built-in support for chart integration with offset and range helpers
 - ⬅️➡️ **Navigation Arrows**: Move forward and backward through time periods
+- 🎛️ **Flexible Range Modes**: Show/hide specific range buttons (day/week/month/year)
 - 🚫 **Future Date Control**: Optional restriction to prevent future date selection
 - 📍 **Minimum Date**: Set the earliest selectable date
-- 🎨 **Customizable Appearance**: Hide background, choose icon or text for "Today" button
+- 🎨 **Display Modes**: Choose between Default and Compact layouts
+- 🎨 **Customizable Appearance**: Hide background and border, choose icon or text for "Today" button
+- 🔧 **Smart Entity Selection**: Entity selectors with domain filtering and create-on-the-spot capability
 - 🌐 **ISO Week Support**: Properly handles ISO weeks (Monday-Sunday)
 - ⚡ **Reactive**: Updates automatically when entities change
 
@@ -44,7 +49,15 @@ resources:
 
 ## Prerequisites
 
-This card requires two `input_datetime` helper entities to store the start and end dates. Create them in your `configuration.yaml`:
+This card requires two `input_datetime` helper entities to store the start and end dates. You can create them either:
+
+### Through the UI (Recommended)
+1. Go to Settings → Devices & Services → Helpers
+2. Click "+ CREATE HELPER"
+3. Select "Date and/or time"
+4. Create two helpers with date only (no time)
+
+### Or in configuration.yaml
 
 ```yaml
 input_datetime:
@@ -60,6 +73,31 @@ input_datetime:
 ```
 
 After adding these, restart Home Assistant or reload the input_datetime integration.
+
+### Optional: Range and Offset Helpers
+
+For advanced use cases (e.g., ApexCharts integration), you can also create two `input_number` helpers:
+
+```yaml
+input_number:
+  date_range_days:
+    name: Date Range Days
+    min: 1
+    max: 3650
+    step: 1
+    mode: box
+
+  date_range_offset:
+    name: Date Range Offset
+    min: -3650
+    max: 0
+    step: 1
+    mode: box
+```
+
+These helpers will automatically update with:
+- **Range**: Number of days in the selected range (end - start + 1)
+- **Offset**: Days from today to the start date (0 = today, -7 = 7 days ago)
 
 ## Usage
 
@@ -77,12 +115,21 @@ end_entity: input_datetime.date_range_end
 type: custom:date-range-selector-card
 start_entity: input_datetime.date_range_start
 end_entity: input_datetime.date_range_end
+range_entity: input_number.date_range_days
+offset_entity: input_number.date_range_offset
 show_arrows: true
 today_button_type: icon
 show_custom_range: true
 hide_background: false
 disable_future: true
 min_date: '2020-01-01'
+display_mode: default
+visible_range_modes:
+  day: true
+  week: true
+  month: true
+  year: false
+default_range_mode: week
 ```
 
 ## Configuration Options
@@ -91,17 +138,29 @@ min_date: '2020-01-01'
 |--------|------|---------|-------------|
 | `start_entity` | string | **Required** | Entity ID for the start date (must be an `input_datetime` helper) |
 | `end_entity` | string | **Required** | Entity ID for the end date (must be an `input_datetime` helper) |
+| `range_entity` | string | - | Entity ID for storing range in days (must be an `input_number` helper) |
+| `offset_entity` | string | - | Entity ID for storing offset in days from today (must be an `input_number` helper) |
 | `show_arrows` | boolean | `true` | Show previous/next navigation arrows |
 | `today_button_type` | string | `icon` | Display "Today" button as `icon` or `text` |
-| `show_custom_range` | boolean | `false` | Show "Custom" button with date pickers |
-| `hide_background` | boolean | `false` | Remove card background and shadow |
+| `show_custom_range` | boolean | `false` | Show "Custom" button with modern date pickers |
+| `hide_background` | boolean | `false` | Remove card background, shadow, and border |
 | `disable_future` | boolean | `false` | Prevent selection of future dates (caps at today) |
 | `min_date` | string | - | Minimum selectable date in `YYYY-MM-DD` format |
+| `display_mode` | string | `default` | Display mode: `default` or `compact` |
+| `visible_range_modes` | object | All `true` | Control which range mode buttons to show (day/week/month/year) |
+| `default_range_mode` | string | - | Default range mode on load (day/week/month/year). Defaults to smallest visible if not set |
 
 ### Option Details
 
 #### `start_entity` & `end_entity`
-These are the entity IDs of your `input_datetime` helpers. The card will update these entities when date ranges are selected.
+These are the entity IDs of your `input_datetime` helpers. The card will update these entities when date ranges are selected. Use the entity selector in the card editor to easily pick or create these helpers.
+
+#### `range_entity` & `offset_entity`
+Optional `input_number` helpers that automatically update with calculated values:
+- **range_entity**: Stores the number of days in the current range (e.g., 7 for a week)
+- **offset_entity**: Stores days from today to the start date (0 = today, -7 = 7 days ago, -30 = 30 days ago)
+
+These are particularly useful for chart integrations like ApexCharts where you need to dynamically adjust the data range.
 
 #### `show_arrows`
 When enabled, displays left and right arrow buttons for navigating through time periods. For example, if "Week" is selected, the arrows will move one week backward or forward.
@@ -111,10 +170,33 @@ When enabled, displays left and right arrow buttons for navigating through time 
 - `text`: Shows the text "Today"
 
 #### `show_custom_range`
-Adds a "Custom" button that, when clicked, reveals two date pickers for manual start and end date selection.
+Adds a "Custom" button that, when clicked, reveals modern date pickers for manual start and end date selection. The date pickers use Home Assistant's native `ha-date-input` component with a beautiful popup calendar interface.
+
+**Smart Date Validation:**
+- The end date picker automatically disables dates before the selected start date
+- If you change the start date to be after the current end date, the end date automatically updates to match
 
 #### `hide_background`
-Removes the card's background and shadow, making it blend seamlessly with your dashboard background. Useful for creating cleaner, more integrated layouts.
+Removes the card's background, shadow, and border, making it blend seamlessly with your dashboard background. Useful for creating cleaner, more integrated layouts.
+
+#### `display_mode`
+Choose between two display modes:
+- `default`: Standard layout with date range display above buttons
+- `compact`: Condensed layout with smaller buttons and date range display below
+
+#### `visible_range_modes`
+Control which range mode buttons are displayed. Object with boolean values for each mode:
+```yaml
+visible_range_modes:
+  day: true
+  week: true
+  month: false
+  year: false
+```
+**Important:** At least one range mode must be visible. If only one mode is active and custom range is disabled, that mode's button will be hidden (since there are no alternatives to select).
+
+#### `default_range_mode`
+Sets which range mode is selected by default when the card loads. If not specified or if the specified mode is hidden, the card defaults to the smallest visible range mode (day → week → month → year).
 
 #### `disable_future`
 When enabled:
@@ -140,7 +222,25 @@ All calculations respect the `disable_future` and `min_date` constraints.
 
 ## Using the Card with Other Cards
 
-The date range entities can be used as filters in other cards. For example, with the History Card:
+The date range entities can be used as filters in other cards.
+
+### ApexCharts Integration
+
+With the optional range and offset helpers, you can create dynamic charts that automatically adjust based on your selected date range:
+
+```yaml
+type: custom:apexcharts-card
+graph_span: sensor.date_range_days  # Uses the range helper
+span:
+  offset: sensor.date_range_offset   # Uses the offset helper
+series:
+  - entity: sensor.temperature
+    name: Temperature
+```
+
+This setup allows the chart to automatically update when you change the date range in the selector card!
+
+### History Card
 
 ```yaml
 type: history-graph
@@ -148,10 +248,25 @@ entities:
   - entity: sensor.temperature
 hours_to_show: 168
 title: Temperature History
-# Note: You'll need custom automation/scripts to use the date range entities with cards
+# Note: You'll need custom automation/scripts to use the date range entities with history cards
 ```
 
-Or create automations that trigger when the date range changes to update other sensors or perform calculations.
+### Automation Example
+
+Create automations that trigger when the date range changes to update other sensors or perform calculations:
+
+```yaml
+automation:
+  - alias: "Update Chart Data on Date Range Change"
+    trigger:
+      - platform: state
+        entity_id: input_datetime.date_range_start
+      - platform: state
+        entity_id: input_datetime.date_range_end
+    action:
+      - service: homeassistant.update_entity
+        entity_id: sensor.your_sensor
+```
 
 ## Styling
 
