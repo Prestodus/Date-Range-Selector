@@ -1,8 +1,8 @@
 # Dependencies
 node_modules/
 
-# Build output
-dist/
+# Build output - Keep dist/ for HACS
+# dist/
 
 # TypeScript cache
 *.tsbuildinfo
