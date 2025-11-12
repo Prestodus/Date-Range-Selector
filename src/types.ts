@@ -2,12 +2,24 @@ export interface DateRangeSelectorCardConfig extends Record<string, any> {
   type: string;
   start_entity: string;
   end_entity: string;
+  range_entity?: string; // New: entity for storing range (number of days)
+  offset_entity?: string; // New: entity for storing offset (days from start)
   show_arrows?: boolean;
   today_button_type?: 'icon' | 'text';
   hide_background?: boolean;
   show_custom_range?: boolean;
   disable_future?: boolean;
   min_date?: string;
+  display_mode?: 'default' | 'compact'; // New: display mode
+  visible_range_modes?: RangeModeVisibility; // New: which range modes to show
+  default_range_mode?: PresetType; // New: default range mode selection
+}
+
+export interface RangeModeVisibility {
+  day?: boolean;
+  week?: boolean;
+  month?: boolean;
+  year?: boolean;
 }
 
 export type PresetType = 'day' | 'week' | 'month' | 'year' | 'custom';
