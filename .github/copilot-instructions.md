@@ -6,8 +6,13 @@ This is a custom Lovelace card for Home Assistant that provides an intuitive int
 
 **Key Features:**
 - Preset date ranges (Day, Week, Month, Year)
-- Custom range selection with date pickers
+- Modern date pickers using Home Assistant's native components (ha-date-input)
+- Helper integration with automatic updates for range and offset entities
+- ApexCharts ready with built-in support for offset and range helpers
 - Navigation arrows for moving through time periods
+- Flexible range modes to show/hide specific range buttons
+- Display modes (Default and Compact layouts)
+- Smart entity selection with domain filtering and create-on-the-spot capability
 - Future date control and minimum date restrictions
 - ISO week support (Monday-Sunday)
 - Theme-aware styling using Home Assistant CSS variables
@@ -78,18 +83,46 @@ dist/
 - Use `hass.callService()` for updating entity states
 - Implement `setConfig()` for card configuration
 - Provide `getConfigElement()` and `getStubConfig()` static methods
+- Use `ha-entity-picker` for entity selection with domain filtering
+- Use `ha-date-input` for modern, native date picker components
+- Support `ha-selector` for configuration UI with entity creation
 
 ## Configuration Options
 
 The card supports these configuration options:
 - `start_entity` (required): Entity ID for start date (input_datetime)
 - `end_entity` (required): Entity ID for end date (input_datetime)
+- `range_entity` (optional): Entity ID for storing range in days (input_number)
+- `offset_entity` (optional): Entity ID for storing offset in days from today (input_number)
 - `show_arrows` (optional, default: true): Show navigation arrows
 - `today_button_type` (optional, default: 'icon'): 'icon' or 'text'
-- `show_custom_range` (optional, default: false): Show custom date pickers
-- `hide_background` (optional, default: false): Remove card background
+- `show_custom_range` (optional, default: false): Show custom button with modern date pickers
+- `hide_background` (optional, default: false): Remove card background, shadow, and border
 - `disable_future` (optional, default: false): Prevent future date selection
 - `min_date` (optional): Minimum selectable date (YYYY-MM-DD format)
+- `display_mode` (optional, default: 'default'): 'default' or 'compact'
+- `visible_range_modes` (optional, all true by default): Control which range buttons to show (day/week/month/year)
+- `default_range_mode` (optional): Default range mode selection ('day', 'week', 'month', 'year')
+
+## Helper Integration and ApexCharts Support
+
+The card supports optional helper entities for advanced use cases like ApexCharts integration:
+
+### Range and Offset Helpers
+- **Range Helper** (`range_entity`): Automatically updated with the number of days in the selected range (end - start + 1)
+- **Offset Helper** (`offset_entity`): Automatically updated with days from today to the start date (0 = today, -7 = 7 days ago)
+- These helpers enable dynamic chart periods in ApexCharts without automation scripts
+
+### ApexCharts Integration Example
+```yaml
+type: custom:apexcharts-card
+graph_span: ${range_entity}
+span:
+  end: day
+  offset: ${offset_entity}
+```
+
+This allows charts to automatically update their time range when the date selector changes.
 
 ## Testing Approach
 
@@ -108,7 +141,11 @@ The card supports these configuration options:
 ### Adding a New Configuration Option
 1. Add the option to `DateRangeSelectorCardConfig` interface in `types.ts`
 2. Update `getStubConfig()` in the main component
-3. Add UI controls in `editor.ts`
+3. Add UI controls in `editor.ts` using appropriate selectors:
+   - Use `ha-entity-picker` with `include-domains` for entity selection
+   - Use `ha-selector` for advanced entity selection with creation support
+   - Use `ha-formfield` and `ha-switch` for boolean options
+   - Use `mwc-button` for action buttons
 4. Implement the functionality in the main component
 5. Update README.md documentation
 
@@ -127,6 +164,15 @@ The card supports these configuration options:
    - `--divider-color`: Borders
 2. Keep styles within the component's shadow DOM
 3. Use `css` tagged template literals in static styles
+4. Support multiple display modes (default and compact)
+5. When `hide_background` is true, remove card background, shadow, and border
+
+### Working with Modern Date Pickers
+1. Use Home Assistant's native `ha-date-input` component for date selection
+2. Pass the `hass` object to date input components
+3. Handle date change events with `@value-changed` listener
+4. Format dates consistently using `format(date, 'yyyy-MM-dd')`
+5. Set `min` and `max` attributes based on `min_date` and `disable_future` settings
 
 ## Build and Release Process
 
@@ -144,8 +190,11 @@ The card supports these configuration options:
 
 ### Entity Types
 - Works with `input_datetime` entities (has_date: true, has_time: false)
+- Optionally works with `input_number` entities for range and offset helpers
 - Updates entity values using `input_datetime.set_datetime` service
+- Updates number entities using `input_number.set_value` service
 - Reads current values from `hass.states[entityId].state`
+- Automatically calculates and updates range (days) and offset (days from today)
 
 ### Custom Card Requirements
 - Register as a custom card with `customElements.define()`
