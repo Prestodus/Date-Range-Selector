@@ -367,7 +367,7 @@ export class DateRangeSelectorCard extends LitElement {
   }
 
   private _handleCustomStartChange(e: CustomEvent): void {
-    const value = (e.target as any).value;
+    const value = (e.detail as any).value;
     if (value) {
       const newStart = parseISO(value);
       let newEnd = this.currentEndDate;
@@ -382,7 +382,7 @@ export class DateRangeSelectorCard extends LitElement {
   }
 
   private _handleCustomEndChange(e: CustomEvent): void {
-    const value = (e.target as any).value;
+    const value = (e.detail as any).value;
     if (value) {
       const newEnd = parseISO(value);
       this._setDateRange(this.currentStartDate, newEnd);
@@ -527,24 +527,24 @@ export class DateRangeSelectorCard extends LitElement {
             ? html`
                 <div class="custom-range-pickers">
                   <div class="picker-group">
-                    <label>Start Date</label>
-                    <input
-                      type="date"
-                      .value=${format(this.currentStartDate, 'yyyy-MM-dd')}
-                      @change=${this._handleCustomStartChange}
+                    <ha-date-input
+                      .locale=${this.hass.locale}
+                      .value=${this.currentStartDate.toISOString()}
+                      .label=${'Start Date'}
+                      @value-changed=${this._handleCustomStartChange}
                       .min=${this.config.min_date || ''}
-                      .max=${this.config.disable_future ? format(new Date(), 'yyyy-MM-dd') : ''}
-                    />
+                      .max=${this.config.disable_future ? new Date().toISOString() : ''}
+                    ></ha-date-input>
                   </div>
                   <div class="picker-group">
-                    <label>End Date</label>
-                    <input
-                      type="date"
-                      .value=${format(this.currentEndDate, 'yyyy-MM-dd')}
-                      @change=${this._handleCustomEndChange}
-                      .min=${format(this.currentStartDate, 'yyyy-MM-dd')}
-                      .max=${this.config.disable_future ? format(new Date(), 'yyyy-MM-dd') : ''}
-                    />
+                    <ha-date-input
+                      .locale=${this.hass.locale}
+                      .value=${this.currentEndDate.toISOString()}
+                      .label=${'End Date'}
+                      @value-changed=${this._handleCustomEndChange}
+                      .min=${this.currentStartDate.toISOString()}
+                      .max=${this.config.disable_future ? new Date().toISOString() : ''}
+                    ></ha-date-input>
                   </div>
                 </div>
               `
@@ -689,7 +689,8 @@ export class DateRangeSelectorCard extends LitElement {
         color: var(--secondary-text-color);
       }
 
-      .picker-group input[type='date'] {
+      .picker-group input[type='date'],
+      .picker-group ha-date-input {
         padding: 10px;
         border: 1px solid var(--divider-color, #e0e0e0);
         border-radius: 4px;
@@ -697,6 +698,11 @@ export class DateRangeSelectorCard extends LitElement {
         color: var(--primary-text-color);
         font-size: 14px;
         font-family: inherit;
+      }
+
+      .picker-group ha-date-input {
+        padding: 0;
+        border: none;
       }
 
       @media (max-width: 600px) {

@@ -29,6 +29,11 @@ export interface HomeAssistant {
   states: {
     [entity_id: string]: HassEntity;
   };
+  locale: {
+    language: string;
+    number_format: string;
+    time_format: string;
+  };
   // Add other properties as needed
 }
 
