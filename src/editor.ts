@@ -105,8 +105,14 @@ export class DateRangeSelectorEditor extends LitElement {
     
     const newConfig: DateRangeSelectorCardConfig = {
       ...this.config,
-      [configKey]: value || '',
     };
+
+    // If value is empty or undefined, remove the key from config
+    if (!value || value === '') {
+      delete newConfig[configKey];
+    } else {
+      newConfig[configKey] = value;
+    }
 
     const event = new CustomEvent('config-changed', {
       detail: { config: newConfig },
