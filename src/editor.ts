@@ -29,8 +29,8 @@ export class DateRangeSelectorEditor extends LitElement {
   public static getStubConfig(): DateRangeSelectorCardConfig {
     return {
       type: 'custom:date-range-selector-card',
-      start_entity: 'input_datetime.date_range_start',
-      end_entity: 'input_datetime.date_range_end',
+      start_entity: '',
+      end_entity: '',
       show_arrows: true,
       today_button_type: 'icon',
     };
@@ -123,9 +123,11 @@ export class DateRangeSelectorEditor extends LitElement {
 
     return html`
       <div class="card-config">
+        <h3>Required Entities</h3>
+        
         <!-- Start Entity -->
         <div class="config-row">
-          <label for="start_entity">Start Entity (Required)</label>
+          <label for="start_entity">Start Entity</label>
           <ha-selector
             .hass=${this.hass}
             .selector=${{ entity: { domain: ['input_datetime'] } }}
@@ -139,7 +141,7 @@ export class DateRangeSelectorEditor extends LitElement {
 
         <!-- End Entity -->
         <div class="config-row">
-          <label for="end_entity">End Entity (Required)</label>
+          <label for="end_entity">End Entity</label>
           <ha-selector
             .hass=${this.hass}
             .selector=${{ entity: { domain: ['input_datetime'] } }}
@@ -153,152 +155,14 @@ export class DateRangeSelectorEditor extends LitElement {
 
         <hr />
 
-        <!-- Show Arrows -->
-        <div class="config-row toggle-row">
-          <label for="show_arrows">Show Navigation Arrows</label>
-          <input
-            type="checkbox"
-            id="show_arrows"
-            .configValue=${'show_arrows'}
-            .checked=${this.config.show_arrows !== false}
-            @change=${this._valueChanged}
-          />
-          <div class="helper-text">
-            Display previous/next arrows to navigate through date ranges
-          </div>
-        </div>
-
-        <!-- Today Button Type -->
-        <div class="config-row">
-          <label for="today_button_type">Today Button Type</label>
-          <select
-            id="today_button_type"
-            .configValue=${'today_button_type'}
-            .value=${this.config.today_button_type || 'icon'}
-            @change=${this._valueChanged}
-          >
-            <option value="icon">Icon</option>
-            <option value="text">Text</option>
-          </select>
-          <div class="helper-text">
-            Show the "Today" button as an icon or text label
-          </div>
-        </div>
-
-        <!-- Show Custom Range -->
-        <div class="config-row toggle-row">
-          <label for="show_custom_range">Show Custom Range Option</label>
-          <input
-            type="checkbox"
-            id="show_custom_range"
-            .configValue=${'show_custom_range'}
-            .checked=${this.config.show_custom_range === true}
-            @change=${this._valueChanged}
-          />
-          <div class="helper-text">
-            Display a "Custom" button that reveals date pickers for manual selection
-          </div>
-        </div>
-
-        <!-- Hide Background -->
-        <div class="config-row toggle-row">
-          <label for="hide_background">Hide Card Background</label>
-          <input
-            type="checkbox"
-            id="hide_background"
-            .configValue=${'hide_background'}
-            .checked=${this.config.hide_background === true}
-            @change=${this._valueChanged}
-          />
-          <div class="helper-text">
-            Remove the card background and shadow to blend with the dashboard
-          </div>
-        </div>
-
-        <hr />
-
-        <!-- Disable Future -->
-        <div class="config-row toggle-row">
-          <label for="disable_future">Disable Future Dates</label>
-          <input
-            type="checkbox"
-            id="disable_future"
-            .configValue=${'disable_future'}
-            .checked=${this.config.disable_future === true}
-            @change=${this._valueChanged}
-          />
-          <div class="helper-text">
-            Prevent selection of dates in the future (caps ranges at today)
-          </div>
-        </div>
-
-        <!-- Minimum Date -->
-        <div class="config-row">
-          <label for="min_date">Minimum Date</label>
-          <input
-            type="date"
-            id="min_date"
-            .configValue=${'min_date'}
-            .value=${this.config.min_date || ''}
-            @input=${this._valueChanged}
-          />
-          <div class="helper-text">
-            Earliest selectable date (YYYY-MM-DD format). Leave empty for no limit.
-          </div>
-        </div>
-
-        <hr />
-
-        <!-- Range Entity -->
-        <div class="config-row">
-          <label for="range_entity">Range Helper Entity (Optional)</label>
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{ entity: { domain: ['input_number'] } }}
-            .value=${this.config.range_entity || ''}
-            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'range_entity')}
-          ></ha-selector>
-          <div class="helper-text">
-            Entity for storing the range in days (must be an input_number helper). Useful for apex-charts.
-          </div>
-        </div>
-
-        <!-- Offset Entity -->
-        <div class="config-row">
-          <label for="offset_entity">Offset Helper Entity (Optional)</label>
-          <ha-selector
-            .hass=${this.hass}
-            .selector=${{ entity: { domain: ['input_number'] } }}
-            .value=${this.config.offset_entity || ''}
-            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'offset_entity')}
-          ></ha-selector>
-          <div class="helper-text">
-            Entity for storing offset in days from today to start date (must be an input_number helper). 0 = today, -7 = 7 days ago.
-          </div>
-        </div>
-
-        <hr />
-
-        <!-- Display Mode -->
-        <div class="config-row">
-          <label for="display_mode">Display Mode</label>
-          <select
-            id="display_mode"
-            .configValue=${'display_mode'}
-            .value=${this.config.display_mode || 'default'}
-            @change=${this._valueChanged}
-          >
-            <option value="default">Default</option>
-            <option value="compact">Compact</option>
-          </select>
-          <div class="helper-text">
-            Choose between default and compact display modes
-          </div>
-        </div>
+        <h3>Range Mode Configuration</h3>
 
         <!-- Visible Range Modes -->
         <div class="config-row">
           <label>Visible Range Modes</label>
+          <div class="helper-text">
+            Choose which range mode buttons to display (at least one must be active)
+          </div>
           <div class="checkbox-group">
             <label class="checkbox-label">
               <input
@@ -337,9 +201,6 @@ export class DateRangeSelectorEditor extends LitElement {
               <span>Year</span>
             </label>
           </div>
-          <div class="helper-text">
-            Choose which range mode buttons to display (at least one must be active)
-          </div>
         </div>
 
         <!-- Default Range Mode -->
@@ -361,6 +222,167 @@ export class DateRangeSelectorEditor extends LitElement {
             Default range mode to select on load (defaults to smallest visible if not set)
           </div>
         </div>
+
+        <hr />
+
+        <h3>Display Options</h3>
+
+        <!-- Display Mode -->
+        <div class="config-row">
+          <label for="display_mode">Display Mode</label>
+          <select
+            id="display_mode"
+            .configValue=${'display_mode'}
+            .value=${this.config.display_mode || 'default'}
+            @change=${this._valueChanged}
+          >
+            <option value="default">Default</option>
+            <option value="compact">Compact</option>
+          </select>
+          <div class="helper-text">
+            Choose between default and compact display modes
+          </div>
+        </div>
+
+        <!-- Today Button Type -->
+        <div class="config-row">
+          <label for="today_button_type">Today Button Type</label>
+          <select
+            id="today_button_type"
+            .configValue=${'today_button_type'}
+            .value=${this.config.today_button_type || 'icon'}
+            @change=${this._valueChanged}
+          >
+            <option value="icon">Icon</option>
+            <option value="text">Text</option>
+          </select>
+          <div class="helper-text">
+            Show the current period button as an icon or text label
+          </div>
+        </div>
+
+        <!-- Show Navigation Arrows -->
+        <div class="config-row checkbox-config">
+          <label for="show_arrows">Show Navigation Arrows</label>
+          <div class="helper-text">
+            Display previous/next arrows to navigate through date ranges
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="show_arrows"
+              .configValue=${'show_arrows'}
+              .checked=${this.config.show_arrows !== false}
+              @change=${this._valueChanged}
+            />
+            <span>Enable navigation arrows</span>
+          </label>
+        </div>
+
+        <!-- Show Custom Range -->
+        <div class="config-row checkbox-config">
+          <label for="show_custom_range">Show Custom Range Option</label>
+          <div class="helper-text">
+            Display a "Custom" button that reveals date pickers for manual selection
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="show_custom_range"
+              .configValue=${'show_custom_range'}
+              .checked=${this.config.show_custom_range === true}
+              @change=${this._valueChanged}
+            />
+            <span>Enable custom date range picker</span>
+          </label>
+        </div>
+
+        <!-- Hide Background -->
+        <div class="config-row checkbox-config">
+          <label for="hide_background">Hide Card Background</label>
+          <div class="helper-text">
+            Remove the card background and shadow to blend with the dashboard
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="hide_background"
+              .configValue=${'hide_background'}
+              .checked=${this.config.hide_background === true}
+              @change=${this._valueChanged}
+            />
+            <span>Hide card background</span>
+          </label>
+        </div>
+
+        <hr />
+
+        <h3>Date Constraints</h3>
+
+        <!-- Disable Future -->
+        <div class="config-row checkbox-config">
+          <label for="disable_future">Disable Future Dates</label>
+          <div class="helper-text">
+            Prevent selection of dates in the future (caps ranges at today)
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="disable_future"
+              .configValue=${'disable_future'}
+              .checked=${this.config.disable_future === true}
+              @change=${this._valueChanged}
+            />
+            <span>Disable future dates</span>
+          </label>
+        </div>
+
+        <!-- Minimum Date -->
+        <div class="config-row">
+          <label for="min_date">Minimum Date</label>
+          <input
+            type="date"
+            id="min_date"
+            .configValue=${'min_date'}
+            .value=${this.config.min_date || ''}
+            @input=${this._valueChanged}
+          />
+          <div class="helper-text">
+            Earliest selectable date (YYYY-MM-DD format). Leave empty for no limit.
+          </div>
+        </div>
+
+        <hr />
+
+        <h3>Optional Helper Entities</h3>
+
+        <!-- Range Entity -->
+        <div class="config-row">
+          <label for="range_entity">Range Helper Entity</label>
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{ entity: { domain: ['input_number'] } }}
+            .value=${this.config.range_entity || ''}
+            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'range_entity')}
+          ></ha-selector>
+          <div class="helper-text">
+            Entity for storing the range in days (must be an input_number helper). Useful for ApexCharts integration.
+          </div>
+        </div>
+
+        <!-- Offset Entity -->
+        <div class="config-row">
+          <label for="offset_entity">Offset Helper Entity</label>
+          <ha-selector
+            .hass=${this.hass}
+            .selector=${{ entity: { domain: ['input_number'] } }}
+            .value=${this.config.offset_entity || ''}
+            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'offset_entity')}
+          ></ha-selector>
+          <div class="helper-text">
+            Entity for storing offset in days from today to start date (must be an input_number helper). 0 = today, -7 = 7 days ago. Useful for ApexCharts integration.
+          </div>
+        </div>
       </div>
     `;
   }
@@ -374,20 +396,21 @@ export class DateRangeSelectorEditor extends LitElement {
         padding: 16px;
       }
 
+      h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--primary-text-color);
+        margin: 8px 0 0 0;
+      }
+
       .config-row {
         display: flex;
         flex-direction: column;
         gap: 8px;
       }
 
-      .toggle-row {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      .toggle-row label {
-        flex: 1;
+      .checkbox-config {
+        gap: 4px;
       }
 
       label {
@@ -423,16 +446,11 @@ export class DateRangeSelectorEditor extends LitElement {
         border-color: var(--primary-color);
       }
 
-      input[type='checkbox'] {
-        width: 40px;
-        height: 24px;
-        cursor: pointer;
-      }
-
       .helper-text {
         font-size: 12px;
         color: var(--secondary-text-color);
         font-style: italic;
+        margin-top: 0;
       }
 
       hr {
@@ -467,10 +485,12 @@ export class DateRangeSelectorEditor extends LitElement {
         width: auto;
         height: auto;
         margin: 0;
+        cursor: pointer;
       }
 
       .checkbox-label span {
         color: var(--primary-text-color);
+        font-weight: normal;
       }
     `;
   }

@@ -25,7 +25,7 @@ import { DateRangeSelectorCardConfig, PresetType, HomeAssistant } from './types'
 // Import the editor
 import './editor';
 
-const VERSION = '0.0.1';
+const VERSION = '0.0.2';
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c v${VERSION} `,
@@ -49,8 +49,8 @@ export class DateRangeSelectorCard extends LitElement {
   public static getStubConfig(): DateRangeSelectorCardConfig {
     return {
       type: 'custom:date-range-selector-card',
-      start_entity: 'input_datetime.date_range_start',
-      end_entity: 'input_datetime.date_range_end',
+      start_entity: '',
+      end_entity: '',
       show_arrows: true,
       today_button_type: 'icon',
     };
@@ -137,8 +137,10 @@ export class DateRangeSelectorCard extends LitElement {
 
   private _handleToday(): void {
     const today = new Date();
-    this.selectedPreset = 'day';
-    this._setDateRange(startOfDay(today), endOfDay(today));
+    
+    // Calculate range based on current mode
+    const { start, end } = this._calculatePresetRange(this.selectedPreset === 'custom' ? 'day' : this.selectedPreset, today);
+    this._setDateRange(start, end);
   }
 
   private _handlePreset(preset: PresetType): void {
@@ -159,31 +161,29 @@ export class DateRangeSelectorCard extends LitElement {
     if (this.selectedPreset === 'custom') return;
 
     const amount = direction === 'prev' ? -1 : 1;
-    let newStart: Date;
-    let newEnd: Date;
+    let referenceDate: Date;
 
+    // Get a reference date for calculating the new range
+    // Use start date for calculating the new period
     switch (this.selectedPreset) {
       case 'day':
-        newStart = addDays(this.currentStartDate, amount);
-        newEnd = addDays(this.currentEndDate, amount);
+        referenceDate = addDays(this.currentStartDate, amount);
         break;
       case 'week':
-        newStart = addWeeks(this.currentStartDate, amount);
-        newEnd = addWeeks(this.currentEndDate, amount);
+        referenceDate = addWeeks(this.currentStartDate, amount);
         break;
       case 'month':
-        newStart = addMonths(this.currentStartDate, amount);
-        newEnd = addMonths(this.currentEndDate, amount);
+        referenceDate = addMonths(this.currentStartDate, amount);
         break;
       case 'year':
-        newStart = addYears(this.currentStartDate, amount);
-        newEnd = addYears(this.currentEndDate, amount);
+        referenceDate = addYears(this.currentStartDate, amount);
         break;
       default:
         return;
     }
 
-    const { start, end } = this._applyConstraints(newStart, newEnd);
+    // Calculate the full range for the new period
+    const { start, end } = this._calculatePresetRange(this.selectedPreset, referenceDate);
     this._setDateRange(start, end);
   }
 
@@ -232,11 +232,13 @@ export class DateRangeSelectorCard extends LitElement {
       }
     }
 
-    // Apply disable_future constraint
+    // Apply disable_future constraint - only cap the end date if it goes beyond today
+    // Don't cap historical ranges
     if (this.config.disable_future) {
       if (isAfter(constrainedEnd, today)) {
         constrainedEnd = today;
       }
+      // Only adjust start date if it's also in the future
       if (isAfter(constrainedStart, today)) {
         constrainedStart = today;
       }
@@ -389,6 +391,23 @@ export class DateRangeSelectorCard extends LitElement {
     }
   }
 
+  private _getTodayButtonLabel(): string {
+    switch (this.selectedPreset) {
+      case 'day':
+        return 'Today';
+      case 'week':
+        return 'This Week';
+      case 'month':
+        return 'This Month';
+      case 'year':
+        return 'This Year';
+      case 'custom':
+        return 'Today';
+      default:
+        return 'Today';
+    }
+  }
+
   private _formatDateRange(): string {
     try {
       const startFormatted = format(this.currentStartDate, 'MMMM d, yyyy');
@@ -440,11 +459,11 @@ export class DateRangeSelectorCard extends LitElement {
             <button
               class="preset-button ${isToday(this.currentStartDate) && this.selectedPreset === 'day' ? 'active' : ''}"
               @click=${this._handleToday}
-              title="Today"
+              title="${this._getTodayButtonLabel()}"
             >
               ${this.config.today_button_type === 'icon'
                 ? html`<ha-icon icon="mdi:calendar-today"></ha-icon>`
-                : html`Today`}
+                : html`${this._getTodayButtonLabel()}`}
             </button>
 
             ${this._shouldShowRangeButton('day')
@@ -529,21 +548,21 @@ export class DateRangeSelectorCard extends LitElement {
                   <div class="picker-group">
                     <ha-date-input
                       .locale=${this.hass.locale}
-                      .value=${this.currentStartDate.toISOString()}
+                      .value=${format(this.currentStartDate, 'yyyy-MM-dd')}
                       .label=${'Start Date'}
                       @value-changed=${this._handleCustomStartChange}
                       .min=${this.config.min_date || ''}
-                      .max=${this.config.disable_future ? new Date().toISOString() : ''}
+                      .max=${this.config.disable_future ? format(new Date(), 'yyyy-MM-dd') : ''}
                     ></ha-date-input>
                   </div>
                   <div class="picker-group">
                     <ha-date-input
                       .locale=${this.hass.locale}
-                      .value=${this.currentEndDate.toISOString()}
+                      .value=${format(this.currentEndDate, 'yyyy-MM-dd')}
                       .label=${'End Date'}
                       @value-changed=${this._handleCustomEndChange}
-                      .min=${this.currentStartDate.toISOString()}
-                      .max=${this.config.disable_future ? new Date().toISOString() : ''}
+                      .min=${format(this.currentStartDate, 'yyyy-MM-dd')}
+                      .max=${this.config.disable_future ? format(new Date(), 'yyyy-MM-dd') : ''}
                     ></ha-date-input>
                   </div>
                 </div>
