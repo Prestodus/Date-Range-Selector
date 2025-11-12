@@ -7,6 +7,8 @@ export interface DateRangeSelectorCardConfig extends Record<string, any> {
   show_arrows?: boolean;
   today_button_type?: 'icon' | 'text';
   hide_background?: boolean;
+  hide_date_display?: boolean;
+  date_display_position?: 'above' | 'below';
   show_custom_range?: boolean;
   disable_future?: boolean;
   min_date?: string;
