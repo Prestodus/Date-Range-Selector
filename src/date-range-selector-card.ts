@@ -520,7 +520,7 @@ export class DateRangeSelectorCard extends LitElement {
       }
 
       return `${startFormatted} - ${endFormatted}`;
-    } catch (e) {
+    } catch {
       return "Invalid date range";
     }
   }
