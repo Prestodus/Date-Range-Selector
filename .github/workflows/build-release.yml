@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,21 +25,34 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      # If a Personal Access Token is provided, prefer it for release creation
+      - name: Create GitHub Release (PAT)
+        if: ${{ secrets.RELEASE_TOKEN != '' }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           draft: false
           prerelease: false
+          files: |
+            dist/date-range-selector-card.js
+            dist/popup-wrapper-card.js
+          fail_on_unmatched_files: false
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
-      - name: Upload dist artifact to Release
-        uses: actions/upload-release-asset@v1
+      # Fallback to GITHUB_TOKEN if PAT is not configured
+      - name: Create GitHub Release (GITHUB_TOKEN)
+        if: ${{ secrets.RELEASE_TOKEN == '' }}
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/date-range-selector-card.js
-          asset_name: date-range-selector-card.js
-          asset_content_type: application/javascript
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/date-range-selector-card.js
+            dist/popup-wrapper-card.js
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
