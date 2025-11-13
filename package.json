@@ -1,6 +1,6 @@
-﻿{
+{
     "name":  "date-range-selector-card",
-    "version":  "0.0.8",
+    "version":  "0.0.9",
     "description":  "A Home Assistant Lovelace card for selecting date ranges",
     "type":  "module",
     "main":  "dist/date-range-selector-card.js",
