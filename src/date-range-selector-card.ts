@@ -17,7 +17,6 @@ import {
   parseISO,
   isBefore,
   isAfter,
-  isToday,
   differenceInDays,
 } from 'date-fns';
 import { DateRangeSelectorCardConfig, PresetType, HomeAssistant } from './types';
@@ -442,6 +441,39 @@ export class DateRangeSelectorCard extends LitElement {
     this.showFloatingPopup = false;
   }
 
+  private _isTodayRangeActive(): boolean {
+    // Check if the current date range matches what would happen if the today button was pressed
+    if (this.selectedPreset === 'custom') return false;
+    
+    const today = new Date();
+    const { start, end } = this._calculatePresetRange(this.selectedPreset, today);
+    
+    // Compare dates by string format to avoid time comparison issues
+    const currentStart = format(this.currentStartDate, 'yyyy-MM-dd');
+    const currentEnd = format(this.currentEndDate, 'yyyy-MM-dd');
+    const todayStart = format(start, 'yyyy-MM-dd');
+    const todayEnd = format(end, 'yyyy-MM-dd');
+    
+    return currentStart === todayStart && currentEnd === todayEnd;
+  }
+
+  private _isEditMode(): boolean {
+    // Check if we're in edit mode by looking at the URL or panel state
+    // In edit mode, the URL typically contains 'edit=1' or the panel class has 'edit-mode'
+    if (typeof window !== 'undefined') {
+      const url = window.location.href;
+      if (url.includes('edit=1')) return true;
+      
+      // Check if any parent has edit-mode class
+      let element = this.parentElement;
+      while (element) {
+        if (element.classList?.contains('edit-mode')) return true;
+        element = element.parentElement;
+      }
+    }
+    return false;
+  }
+
   private _formatDateRange(): string {
     try {
       const startFormatted = format(this.currentStartDate, 'MMMM d, yyyy');
@@ -468,11 +500,11 @@ export class DateRangeSelectorCard extends LitElement {
     const showDateDisplay = !this.config.hide_date_display;
     const datePosition = this.config.date_display_position || 'above';
     const useButtonGroup = this.config.use_button_group === true;
-    const floatingMode = this.config.floating_mode === true;
+    const floatingMode = this.config.floating_mode === true && !this._isEditMode();
 
     // Render date display template
     const renderDateDisplay = () => {
-      if (!showDateDisplay) return '';
+      if (!showDateDisplay) return html``;
       
       if (compactMode) {
         return html`
@@ -506,7 +538,7 @@ export class DateRangeSelectorCard extends LitElement {
           : ''}
 
         <button
-          class="preset-button ${isToday(this.currentStartDate) && this.selectedPreset === 'day' ? 'active' : ''}"
+          class="preset-button ${this._isTodayRangeActive() ? 'active' : ''}"
           @click=${this._handleToday}
           ?disabled=${this.isUpdating}
           title="${this._getTodayButtonLabel()}"
@@ -593,7 +625,7 @@ export class DateRangeSelectorCard extends LitElement {
 
     // Render custom date pickers
     const renderCustomPickers = () => {
-      if (!this.showCustomPickers) return '';
+      if (!this.showCustomPickers) return html``;
       
       return html`
         <div class="custom-range-pickers">
@@ -647,11 +679,12 @@ export class DateRangeSelectorCard extends LitElement {
       return html`
         <div class="floating-container">
           <button
-            class="floating-button ${position}"
+            class="floating-button ${position} ${text ? 'with-text' : ''}"
             @click=${this._toggleFloatingPopup}
             title="Date Range Selector"
           >
-            ${text ? html`<span>${text}</span>` : html`<ha-icon icon="${icon}"></ha-icon>`}
+            <ha-icon icon="${icon}"></ha-icon>
+            ${text ? html`<span class="button-text">${text}</span>` : ''}
           </button>
 
           ${this.showFloatingPopup
@@ -741,11 +774,16 @@ export class DateRangeSelectorCard extends LitElement {
         gap: 4px;
       }
 
+      ha-card.compact-mode .button-row.button-group {
+        gap: 0;
+      }
+
       ha-card.compact-mode .preset-button,
       ha-card.compact-mode .nav-button {
         padding: 6px 10px;
         font-size: 12px;
         min-width: 36px;
+        height: 36px;
       }
 
       ha-card.in-header-mode {
@@ -760,11 +798,16 @@ export class DateRangeSelectorCard extends LitElement {
         gap: 2px;
       }
 
+      ha-card.in-header-mode .button-row.button-group {
+        gap: 0;
+      }
+
       ha-card.in-header-mode .preset-button,
       ha-card.in-header-mode .nav-button {
         padding: 4px 8px;
         font-size: 11px;
         min-width: 32px;
+        height: 32px;
       }
 
       .button-row {
@@ -824,6 +867,7 @@ export class DateRangeSelectorCard extends LitElement {
         align-items: center;
         justify-content: center;
         min-width: 44px;
+        height: 44px;
       }
 
       .preset-button:hover,
@@ -836,10 +880,6 @@ export class DateRangeSelectorCard extends LitElement {
         background: var(--primary-color);
         color: var(--text-primary-color, white);
         border-color: var(--primary-color);
-      }
-
-      .nav-button {
-        padding: 10px;
       }
 
       .nav-button:disabled {
@@ -937,8 +977,14 @@ export class DateRangeSelectorCard extends LitElement {
         --mdc-icon-size: 24px;
       }
 
-      .floating-button span {
-        padding: 0 8px;
+      .floating-button.with-text {
+        width: auto;
+        border-radius: 28px;
+        padding: 0 20px 0 16px;
+        gap: 8px;
+      }
+
+      .floating-button .button-text {
         white-space: nowrap;
       }
 
@@ -1094,7 +1140,7 @@ export class DateRangeSelectorCard extends LitElement {
 // Register the card
 (window as any).customCards = (window as any).customCards || [];
 (window as any).customCards.push({
-  type: 'date-range-selector-card',
+  type: 'custom:date-range-selector-card',
   name: 'Date Range Selector',
   description: 'A card for selecting date ranges with preset buttons',
 });

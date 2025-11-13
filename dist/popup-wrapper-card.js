@@ -553,5 +553,5 @@ function t(t,e,i,o){var n,s=arguments.length,r=s<3?e:null===o?o=Object.getOwnPro
       ha-icon {
         --mdc-icon-size: 20px;
       }
-    `}};t([lt({attribute:!1})],ht.prototype,"hass",void 0),t([ct()],ht.prototype,"config",void 0),t([ct()],ht.prototype,"showPopup",void 0),t([ct()],ht.prototype,"wrappedCard",void 0),ht=t([rt("popup-wrapper-card")],ht),window.customCards=window.customCards||[],window.customCards.push({type:"popup-wrapper-card",name:"Popup Wrapper",description:"Wraps any card in a popup that can be opened via floating button, entity, or auto-open"});export{ht as PopupWrapperCard};
+    `}};t([lt({attribute:!1})],ht.prototype,"hass",void 0),t([ct()],ht.prototype,"config",void 0),t([ct()],ht.prototype,"showPopup",void 0),t([ct()],ht.prototype,"wrappedCard",void 0),ht=t([rt("popup-wrapper-card")],ht),window.customCards=window.customCards||[],window.customCards.push({type:"custom:popup-wrapper-card",name:"Popup Wrapper",description:"Wraps any card in a popup that can be opened via floating button, entity, or auto-open"});export{ht as PopupWrapperCard};
 //# sourceMappingURL=popup-wrapper-card.js.map
