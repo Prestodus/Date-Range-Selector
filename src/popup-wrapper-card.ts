@@ -1,16 +1,20 @@
-import { LitElement, html, css, PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { HomeAssistant } from './types';
+import { LitElement, html, css, PropertyValues } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { HomeAssistant } from "./types";
 
 // Import the editor
-import './popup-wrapper-editor';
+import "./popup-wrapper-editor";
 
 export interface PopupWrapperCardConfig extends Record<string, any> {
   type: string;
   card: any; // The card configuration to wrap
-  trigger_type?: 'floating' | 'entity' | 'auto'; // How to open the popup
+  trigger_type?: "floating" | "entity" | "auto"; // How to open the popup
   trigger_entity?: string; // Entity to display as trigger (for entity mode)
-  floating_button_position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  floating_button_position?:
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
   floating_button_icon?: string;
   floating_button_text?: string;
   popup_title?: string; // Title for the popup
@@ -19,7 +23,7 @@ export interface PopupWrapperCardConfig extends Record<string, any> {
   close_on_click_outside?: boolean; // Close popup when clicking outside
 }
 
-@customElement('popup-wrapper-card')
+@customElement("popup-wrapper-card")
 export class PopupWrapperCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private config!: PopupWrapperCardConfig;
@@ -27,21 +31,21 @@ export class PopupWrapperCard extends LitElement {
   @state() private wrappedCard?: any;
 
   public static getConfigElement() {
-    return document.createElement('popup-wrapper-editor');
+    return document.createElement("popup-wrapper-editor");
   }
 
   public static getStubConfig(): PopupWrapperCardConfig {
     return {
-      type: 'custom:popup-wrapper-card',
-      trigger_type: 'floating',
-      floating_button_position: 'bottom-right',
-      floating_button_icon: 'mdi:card',
-      floating_button_text: '',
-      popup_title: 'Card',
+      type: "custom:popup-wrapper-card",
+      trigger_type: "floating",
+      floating_button_position: "bottom-right",
+      floating_button_icon: "mdi:card",
+      floating_button_text: "",
+      popup_title: "Card",
       auto_open: false,
       close_on_click_outside: true,
       card: {
-        type: 'entities',
+        type: "entities",
         entities: [],
       },
     };
@@ -49,15 +53,15 @@ export class PopupWrapperCard extends LitElement {
 
   public setConfig(config: PopupWrapperCardConfig): void {
     if (!config.card) {
-      throw new Error('You must define a card to wrap');
+      throw new Error("You must define a card to wrap");
     }
 
     this.config = {
-      trigger_type: 'floating',
-      floating_button_position: 'bottom-right',
-      floating_button_icon: 'mdi:card',
-      floating_button_text: '',
-      popup_title: 'Card',
+      trigger_type: "floating",
+      floating_button_position: "bottom-right",
+      floating_button_icon: "mdi:card",
+      floating_button_text: "",
+      popup_title: "Card",
       auto_open: false,
       close_on_click_outside: true,
       ...config,
@@ -69,14 +73,14 @@ export class PopupWrapperCard extends LitElement {
 
   private _isEditMode(): boolean {
     // Check if we're in edit mode by looking at the URL or panel state
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const url = window.location.href;
-      if (url.includes('edit=1')) return true;
-      
+      if (url.includes("edit=1")) return true;
+
       // Check if any parent has edit-mode class
       let element = this.parentElement;
       while (element) {
-        if (element.classList?.contains('edit-mode')) return true;
+        if (element.classList?.contains("edit-mode")) return true;
         element = element.parentElement;
       }
     }
@@ -84,7 +88,7 @@ export class PopupWrapperCard extends LitElement {
   }
 
   public getCardSize(): number {
-    if (this.config.trigger_type === 'floating') {
+    if (this.config.trigger_type === "floating") {
       return 0; // Floating button doesn't take up space
     }
     return 1; // Entity trigger takes minimal space
@@ -92,13 +96,17 @@ export class PopupWrapperCard extends LitElement {
 
   protected updated(changedProperties: PropertyValues): void {
     super.updated(changedProperties);
-    
-    if (changedProperties.has('hass') && this.wrappedCard) {
+
+    if (changedProperties.has("hass") && this.wrappedCard) {
       this.wrappedCard.hass = this.hass;
     }
 
     // Auto-open on load if configured
-    if (changedProperties.has('config') && this.config.auto_open && !this.showPopup) {
+    if (
+      changedProperties.has("config") &&
+      this.config.auto_open &&
+      !this.showPopup
+    ) {
       setTimeout(() => {
         this.showPopup = true;
       }, 100);
@@ -111,7 +119,7 @@ export class PopupWrapperCard extends LitElement {
     try {
       const helpers = await (window as any).loadCardHelpers?.();
       if (!helpers) {
-        console.error('Could not load card helpers');
+        console.error("Could not load card helpers");
         return;
       }
 
@@ -119,7 +127,7 @@ export class PopupWrapperCard extends LitElement {
       this.wrappedCard.hass = this.hass;
       this.requestUpdate();
     } catch (error) {
-      console.error('Error creating wrapped card:', error);
+      console.error("Error creating wrapped card:", error);
     }
   }
 
@@ -142,40 +150,47 @@ export class PopupWrapperCard extends LitElement {
   }
 
   private _renderTrigger() {
-    const triggerType = this.config.trigger_type || 'floating';
+    const triggerType = this.config.trigger_type || "floating";
 
-    if (triggerType === 'floating') {
-      const position = this.config.floating_button_position || 'bottom-right';
-      const icon = this.config.floating_button_icon || 'mdi:card';
-      const text = this.config.floating_button_text || '';
+    if (triggerType === "floating") {
+      const position = this.config.floating_button_position || "bottom-right";
+      const icon = this.config.floating_button_icon || "mdi:card";
+      const text = this.config.floating_button_text || "";
 
       return html`
         <button
-          class="floating-button ${position} ${text ? 'with-text' : ''}"
+          class="floating-button ${position} ${text ? "with-text" : ""}"
           @click=${this._togglePopup}
-          title="${this.config.popup_title || 'Open Card'}"
+          title="${this.config.popup_title || "Open Card"}"
         >
           <ha-icon icon="${icon}"></ha-icon>
-          ${text ? html`<span class="button-text">${text}</span>` : ''}
+          ${text ? html`<span class="button-text">${text}</span>` : ""}
         </button>
       `;
     }
 
-    if (triggerType === 'entity' && this.config.trigger_entity) {
+    if (triggerType === "entity" && this.config.trigger_entity) {
       const entity = this.hass.states[this.config.trigger_entity];
-      
+
       return html`
         <div class="entity-trigger" @click=${this._togglePopup}>
           <ha-card>
             <div class="entity-trigger-content">
               <div class="entity-info">
-                ${entity ? html`
-                  <div class="entity-name">${entity.attributes.friendly_name || this.config.trigger_entity}</div>
-                  <div class="entity-state">${entity.state}</div>
-                ` : html`
-                  <div class="entity-name">${this.config.trigger_entity}</div>
-                  <div class="entity-state">unavailable</div>
-                `}
+                ${entity
+                  ? html`
+                      <div class="entity-name">
+                        ${entity.attributes.friendly_name ||
+                        this.config.trigger_entity}
+                      </div>
+                      <div class="entity-state">${entity.state}</div>
+                    `
+                  : html`
+                      <div class="entity-name">
+                        ${this.config.trigger_entity}
+                      </div>
+                      <div class="entity-state">unavailable</div>
+                    `}
               </div>
               <ha-icon icon="mdi:arrow-expand"></ha-icon>
             </div>
@@ -192,25 +207,29 @@ export class PopupWrapperCard extends LitElement {
     if (!this.showPopup) return html``;
 
     const isEdit = this._isEditMode();
-    const cardContent = isEdit 
-      ? html`<p style="padding: 20px; text-align: center; color: var(--secondary-text-color);">Card preview will be shown when popup is opened</p>`
-      : (this.wrappedCard || html`<p>Loading card...</p>`);
+    const cardContent = isEdit
+      ? html`<p
+          style="padding: 20px; text-align: center; color: var(--secondary-text-color);"
+        >
+          Card preview will be shown when popup is opened
+        </p>`
+      : this.wrappedCard || html`<p>Loading card...</p>`;
 
     return html`
       <div class="popup-overlay" @click=${this._handleOverlayClick}>
         <div class="popup" @click=${(e: Event) => e.stopPropagation()}>
           <div class="popup-header">
             <div class="popup-header-content">
-              ${this.config.popup_icon ? html`<ha-icon icon="${this.config.popup_icon}"></ha-icon>` : ''}
-              <h3>${this.config.popup_title || 'Card'}</h3>
+              ${this.config.popup_icon
+                ? html`<ha-icon icon="${this.config.popup_icon}"></ha-icon>`
+                : ""}
+              <h3>${this.config.popup_title || "Card"}</h3>
             </div>
             <button class="close-button" @click=${this._closePopup}>
               <ha-icon icon="mdi:close"></ha-icon>
             </button>
           </div>
-          <div class="popup-content">
-            ${cardContent}
-          </div>
+          <div class="popup-content">${cardContent}</div>
         </div>
       </div>
     `;
@@ -222,22 +241,23 @@ export class PopupWrapperCard extends LitElement {
     }
 
     const isEdit = this._isEditMode();
-    
+
     // In edit mode, show a simple placeholder for floating trigger
-    if (isEdit && this.config.trigger_type === 'floating') {
+    if (isEdit && this.config.trigger_type === "floating") {
       return html`
         <div class="edit-mode-placeholder">
-          <ha-icon icon="${this.config.floating_button_icon || 'mdi:card'}"></ha-icon>
+          <ha-icon
+            icon="${this.config.floating_button_icon || "mdi:card"}"
+          ></ha-icon>
           <p>Popup Wrapper Card</p>
-          <span>${this.config.popup_title || 'Card'}</span>
+          <span>${this.config.popup_title || "Card"}</span>
         </div>
       `;
     }
 
     return html`
       <div class="popup-wrapper-container">
-        ${this._renderTrigger()}
-        ${this._renderPopup()}
+        ${this._renderTrigger()} ${this._renderPopup()}
       </div>
     `;
   }
@@ -251,7 +271,10 @@ export class PopupWrapperCard extends LitElement {
       .edit-mode-placeholder {
         padding: 20px;
         text-align: center;
-        background: var(--ha-card-background, var(--card-background-color, white));
+        background: var(
+          --ha-card-background,
+          var(--card-background-color, white)
+        );
         border-radius: 8px;
         border: 2px dashed var(--divider-color, #e0e0e0);
       }
@@ -408,7 +431,10 @@ export class PopupWrapperCard extends LitElement {
 
       /* Popup Container */
       .popup {
-        background: var(--ha-card-background, var(--card-background-color, white));
+        background: var(
+          --ha-card-background,
+          var(--card-background-color, white)
+        );
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         max-width: 800px;
@@ -438,7 +464,10 @@ export class PopupWrapperCard extends LitElement {
         border-bottom: 1px solid var(--divider-color, #e0e0e0);
         position: sticky;
         top: 0;
-        background: var(--ha-card-background, var(--card-background-color, white));
+        background: var(
+          --ha-card-background,
+          var(--card-background-color, white)
+        );
         z-index: 1;
       }
 
@@ -514,7 +543,8 @@ export class PopupWrapperCard extends LitElement {
 // Register the card
 (window as any).customCards = (window as any).customCards || [];
 (window as any).customCards.push({
-  type: 'custom:popup-wrapper-card',
-  name: 'Popup Wrapper',
-  description: 'Wraps any card in a popup that can be opened via floating button, entity, or auto-open',
+  type: "custom:popup-wrapper-card",
+  name: "Popup Wrapper",
+  description:
+    "Wraps any card in a popup that can be opened via floating button, entity, or auto-open",
 });

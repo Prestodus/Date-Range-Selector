@@ -539,14 +539,12 @@ function t(t,e,n,i){var o,a=arguments.length,r=a<3?e:null===i?i=Object.getOwnPro
         color: var(--primary-text-color);
         font-weight: normal;
       }
-    `}};t([lt({attribute:!1})],Ae.prototype,"hass",void 0),t([dt()],Ae.prototype,"config",void 0),Ae=t([rt("date-range-selector-editor")],Ae);console.info("%c DATE-RANGE-SELECTOR-CARD %c v0.0.2 ","color: white; background: #0084ff; font-weight: 700;","color: #0084ff; background: white; font-weight: 700;");let Ue=class extends ot{constructor(){super(...arguments),this.selectedPreset="day",this.currentStartDate=wt(new Date),this.currentEndDate=Et(new Date),this.showCustomPickers=!1,this.isUpdating=!1,this.showFloatingPopup=!1}static getConfigElement(){return document.createElement("date-range-selector-editor")}static getStubConfig(){return{type:"custom:date-range-selector-card",start_entity:"",end_entity:"",show_arrows:!0,today_button_type:"icon"}}setConfig(t){if(!t.start_entity)throw new Error("You must define start_entity");if(!t.end_entity)throw new Error("You must define end_entity");this.config={show_arrows:!0,today_button_type:"icon",hide_background:!1,hide_date_display:!1,date_display_position:"above",show_custom_range:!1,disable_future:!1,display_mode:"default",visible_range_modes:{day:!0,week:!0,month:!0,year:!0},use_button_group:!1,floating_mode:!1,floating_button_position:"bottom-right",floating_button_icon:"mdi:calendar-range",floating_button_text:"",popup_title:"Date Range Selector",popup_icon:"",...t};const e=this.config.visible_range_modes;e.day||e.week||e.month||e.year||(e.day=!0),this.config.default_range_mode&&this._isRangeModeVisible(this.config.default_range_mode)?this.selectedPreset=this.config.default_range_mode:e.day?this.selectedPreset="day":e.week?this.selectedPreset="week":e.month?this.selectedPreset="month":e.year&&(this.selectedPreset="year")}getCardSize(){return 3}updated(t){super.updated(t),t.has("hass")&&this.hass&&this._updateDatesFromEntities()}_updateDatesFromEntities(){if(!this.hass||!this.config)return;const t=this.hass.states[this.config.start_entity],e=this.hass.states[this.config.end_entity];if(t&&"unavailable"!==t.state&&"unknown"!==t.state)try{this.currentStartDate=$e(t.state)}catch(t){console.error("Error parsing start date:",t)}if(e&&"unavailable"!==e.state&&"unknown"!==e.state)try{this.currentEndDate=$e(e.state)}catch(t){console.error("Error parsing end date:",t)}}_handleToday(){const t=new Date;"custom"===this.selectedPreset&&(this.selectedPreset="day",this.showCustomPickers=!1);const{start:e,end:n}=this._calculatePresetRange(this.selectedPreset,t);this._setDateRange(e,n)}_handlePreset(t){if("custom"===t)return this.showCustomPickers=!this.showCustomPickers,void(this.selectedPreset=t);this.selectedPreset=t,this.showCustomPickers=!1;const e=new Date,{start:n,end:i}=this._calculatePresetRange(t,e);this._setDateRange(n,i)}_handleNavigation(t){if("custom"===this.selectedPreset)return;const e="prev"===t?-1:1;let n;switch(this.selectedPreset){case"day":n=ft(this.currentStartDate,e);break;case"week":n=_t(this.currentStartDate,e);break;case"month":n=vt(this.currentStartDate,e);break;case"year":n=xt(this.currentStartDate,e);break;default:return}const{start:i,end:o}=this._calculatePresetRange(this.selectedPreset,n);this._setDateRange(i,o)}_calculatePresetRange(t,e){let n,i;switch(t){case"day":default:n=wt(e),i=Et(e);break;case"week":n=function(t,e){var n,i,o,a,r,s,l,d;pt(1,arguments);var c=bt(),u=ht(null!==(n=null!==(i=null!==(o=null!==(a=null==e?void 0:e.weekStartsOn)&&void 0!==a?a:null==e||null===(r=e.locale)||void 0===r||null===(s=r.options)||void 0===s?void 0:s.weekStartsOn)&&void 0!==o?o:c.weekStartsOn)&&void 0!==i?i:null===(l=c.locale)||void 0===l||null===(d=l.options)||void 0===d?void 0:d.weekStartsOn)&&void 0!==n?n:0);if(!(u>=0&&u<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var h=gt(t),p=h.getDay(),g=(p<u?7:0)+p-u;return h.setDate(h.getDate()-g),h.setHours(0,0,0,0),h}(e,{weekStartsOn:1}),i=function(t,e){var n,i,o,a,r,s,l,d;pt(1,arguments);var c=bt(),u=ht(null!==(n=null!==(i=null!==(o=null!==(a=null==e?void 0:e.weekStartsOn)&&void 0!==a?a:null==e||null===(r=e.locale)||void 0===r||null===(s=r.options)||void 0===s?void 0:s.weekStartsOn)&&void 0!==o?o:c.weekStartsOn)&&void 0!==i?i:null===(l=c.locale)||void 0===l||null===(d=l.options)||void 0===d?void 0:d.weekStartsOn)&&void 0!==n?n:0);if(!(u>=0&&u<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var h=gt(t),p=h.getDay(),g=6+(p<u?-7:0)-(p-u);return h.setDate(h.getDate()+g),h.setHours(23,59,59,999),h}(e,{weekStartsOn:1});break;case"month":n=function(t){pt(1,arguments);var e=gt(t);return e.setDate(1),e.setHours(0,0,0,0),e}(e),i=function(t){pt(1,arguments);var e=gt(t),n=e.getMonth();return e.setFullYear(e.getFullYear(),n+1,0),e.setHours(23,59,59,999),e}(e);break;case"year":n=function(t){pt(1,arguments);var e=gt(t),n=new Date(0);return n.setFullYear(e.getFullYear(),0,1),n.setHours(0,0,0,0),n}(e),i=function(t){pt(1,arguments);var e=gt(t),n=e.getFullYear();return e.setFullYear(n+1,0,0),e.setHours(23,59,59,999),e}(e)}return this._applyConstraints(n,i)}_applyConstraints(t,e){const n=Et(new Date);let i=t,o=e;if(this.config.min_date){const t=$e(this.config.min_date);xe(i,t)&&(i=t),xe(o,t)&&(o=t)}return this.config.disable_future&&(_e(o,n)&&(o=n),_e(i,n)&&(i=n)),{start:i,end:o}}_canNavigatePrev(){if("custom"===this.selectedPreset)return!1;if(!this.config.min_date)return!0;const t=$e(this.config.min_date);let e;switch(this.selectedPreset){case"day":e=ft(this.currentStartDate,-1);break;case"week":e=_t(this.currentStartDate,-1);break;case"month":e=vt(this.currentStartDate,-1);break;case"year":e=xt(this.currentStartDate,-1);break;default:return!0}return!xe(e,t)}_canNavigateNext(){if("custom"===this.selectedPreset)return!1;if(!this.config.disable_future)return!0;const t=new Date;let e;switch(this.selectedPreset){case"day":e=ft(this.currentEndDate,1);break;case"week":e=_t(this.currentEndDate,1);break;case"month":e=vt(this.currentEndDate,1);break;case"year":e=xt(this.currentEndDate,1);break;default:return!0}return!_e(e,t)}_isRangeModeVisible(t){return"custom"===t?!0===this.config.show_custom_range:!1!==this.config.visible_range_modes?.[t]}_getVisibleRangeModes(){const t=[];return this._isRangeModeVisible("day")&&t.push("day"),this._isRangeModeVisible("week")&&t.push("week"),this._isRangeModeVisible("month")&&t.push("month"),this._isRangeModeVisible("year")&&t.push("year"),t}_shouldShowRangeButton(t){if(!this._isRangeModeVisible(t))return!1;if(!this.config.show_custom_range){if(1===this._getVisibleRangeModes().length)return!1}return!0}async _setDateRange(t,e){if(this.isUpdating)return;this.isUpdating=!0,this.currentStartDate=t,this.currentEndDate=e;const n=we(t,"yyyy-MM-dd"),i=we(e,"yyyy-MM-dd");try{if(await this.hass.callService("input_datetime","set_datetime",{entity_id:this.config.start_entity,date:n}),await this.hass.callService("input_datetime","set_datetime",{entity_id:this.config.end_entity,date:i}),this.config.range_entity){const n=St(e,t)+1;await this.hass.callService("input_number","set_value",{entity_id:this.config.range_entity,value:n})}if(this.config.offset_entity){const e=St(t,wt(new Date));await this.hass.callService("input_number","set_value",{entity_id:this.config.offset_entity,value:e})}}catch(t){console.error("Error setting date range:",t)}finally{setTimeout(()=>{this.isUpdating=!1},100)}}_handleCustomStartChange(t){const e=t.detail.value;if(e){const t=$e(e);let n=this.currentEndDate;_e(t,this.currentEndDate)&&(n=t),this._setDateRange(t,n)}}_handleCustomEndChange(t){const e=t.detail.value;if(e){const t=$e(e);this._setDateRange(this.currentStartDate,t)}}_getTodayButtonLabel(){switch(this.selectedPreset){case"day":case"custom":default:return"Today";case"week":return"This Week";case"month":return"This Month";case"year":return"This Year"}}_toggleFloatingPopup(){this.showFloatingPopup=!this.showFloatingPopup}_closeFloatingPopup(){this.showFloatingPopup=!1}_isTodayRangeActive(){if("custom"===this.selectedPreset)return!1;const t=new Date,{start:e,end:n}=this._calculatePresetRange(this.selectedPreset,t),i=we(this.currentStartDate,"yyyy-MM-dd"),o=we(this.currentEndDate,"yyyy-MM-dd"),a=we(e,"yyyy-MM-dd"),r=we(n,"yyyy-MM-dd");return i===a&&o===r}_isEditMode(){if("undefined"!=typeof window){if(window.location.href.includes("edit=1"))return!0;let t=this.parentElement;for(;t;){if(t.classList?.contains("edit-mode"))return!0;t=t.parentElement}}return!1}_formatDateRange(){try{const t=we(this.currentStartDate,"MMMM d, yyyy"),e=we(this.currentEndDate,"MMMM d, yyyy");return t===e?t:`${t} - ${e}`}catch(t){return"Invalid date range"}}render(){if(!this.config||!this.hass)return Y``;const t=this.config.hide_background?"no-background":"",e="compact"===this.config.display_mode,n="in-header"===this.config.display_mode,i=!this.config.hide_date_display,o=this.config.date_display_position||"above",a=!0===this.config.use_button_group,r=!0===this.config.floating_mode&&!this._isEditMode(),s=()=>i?e?Y`
+    `}};t([lt({attribute:!1})],Ae.prototype,"hass",void 0),t([dt()],Ae.prototype,"config",void 0),Ae=t([rt("date-range-selector-editor")],Ae);console.info("%c DATE-RANGE-SELECTOR-CARD %c vv0.0.10 ","color: white; background: #0084ff; font-weight: 700;","color: #0084ff; background: white; font-weight: 700;");let Ue=class extends ot{constructor(){super(...arguments),this.selectedPreset="day",this.currentStartDate=wt(new Date),this.currentEndDate=Et(new Date),this.showCustomPickers=!1,this.isUpdating=!1,this.showFloatingPopup=!1}static getConfigElement(){return document.createElement("date-range-selector-editor")}static getStubConfig(){return{type:"custom:date-range-selector-card",start_entity:"",end_entity:"",show_arrows:!0,today_button_type:"icon"}}setConfig(t){if(!t.start_entity)throw new Error("You must define start_entity");if(!t.end_entity)throw new Error("You must define end_entity");this.config={show_arrows:!0,today_button_type:"icon",hide_background:!1,hide_date_display:!1,date_display_position:"above",show_custom_range:!1,disable_future:!1,display_mode:"default",visible_range_modes:{day:!0,week:!0,month:!0,year:!0},use_button_group:!1,floating_mode:!1,floating_button_position:"bottom-right",floating_button_icon:"mdi:calendar-range",floating_button_text:"",popup_title:"Date Range Selector",popup_icon:"",...t};const e=this.config.visible_range_modes;e.day||e.week||e.month||e.year||(e.day=!0),this.config.default_range_mode&&this._isRangeModeVisible(this.config.default_range_mode)?this.selectedPreset=this.config.default_range_mode:e.day?this.selectedPreset="day":e.week?this.selectedPreset="week":e.month?this.selectedPreset="month":e.year&&(this.selectedPreset="year")}getCardSize(){return 3}updated(t){super.updated(t),t.has("hass")&&this.hass&&this._updateDatesFromEntities()}_updateDatesFromEntities(){if(!this.hass||!this.config)return;const t=this.hass.states[this.config.start_entity],e=this.hass.states[this.config.end_entity];if(t&&"unavailable"!==t.state&&"unknown"!==t.state)try{this.currentStartDate=$e(t.state)}catch(t){console.error("Error parsing start date:",t)}if(e&&"unavailable"!==e.state&&"unknown"!==e.state)try{this.currentEndDate=$e(e.state)}catch(t){console.error("Error parsing end date:",t)}}_handleToday(){const t=new Date;"custom"===this.selectedPreset&&(this.selectedPreset="day",this.showCustomPickers=!1);const{start:e,end:n}=this._calculatePresetRange(this.selectedPreset,t);this._setDateRange(e,n)}_handlePreset(t){if("custom"===t)return this.showCustomPickers=!this.showCustomPickers,void(this.selectedPreset=t);this.selectedPreset=t,this.showCustomPickers=!1;const e=new Date,{start:n,end:i}=this._calculatePresetRange(t,e);this._setDateRange(n,i)}_handleNavigation(t){if("custom"===this.selectedPreset)return;const e="prev"===t?-1:1;let n;switch(this.selectedPreset){case"day":n=ft(this.currentStartDate,e);break;case"week":n=_t(this.currentStartDate,e);break;case"month":n=vt(this.currentStartDate,e);break;case"year":n=xt(this.currentStartDate,e);break;default:return}const{start:i,end:o}=this._calculatePresetRange(this.selectedPreset,n);this._setDateRange(i,o)}_calculatePresetRange(t,e){let n,i;switch(t){case"day":default:n=wt(e),i=Et(e);break;case"week":n=function(t,e){var n,i,o,a,r,s,l,d;pt(1,arguments);var c=bt(),u=ht(null!==(n=null!==(i=null!==(o=null!==(a=null==e?void 0:e.weekStartsOn)&&void 0!==a?a:null==e||null===(r=e.locale)||void 0===r||null===(s=r.options)||void 0===s?void 0:s.weekStartsOn)&&void 0!==o?o:c.weekStartsOn)&&void 0!==i?i:null===(l=c.locale)||void 0===l||null===(d=l.options)||void 0===d?void 0:d.weekStartsOn)&&void 0!==n?n:0);if(!(u>=0&&u<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var h=gt(t),p=h.getDay(),g=(p<u?7:0)+p-u;return h.setDate(h.getDate()-g),h.setHours(0,0,0,0),h}(e,{weekStartsOn:1}),i=function(t,e){var n,i,o,a,r,s,l,d;pt(1,arguments);var c=bt(),u=ht(null!==(n=null!==(i=null!==(o=null!==(a=null==e?void 0:e.weekStartsOn)&&void 0!==a?a:null==e||null===(r=e.locale)||void 0===r||null===(s=r.options)||void 0===s?void 0:s.weekStartsOn)&&void 0!==o?o:c.weekStartsOn)&&void 0!==i?i:null===(l=c.locale)||void 0===l||null===(d=l.options)||void 0===d?void 0:d.weekStartsOn)&&void 0!==n?n:0);if(!(u>=0&&u<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var h=gt(t),p=h.getDay(),g=6+(p<u?-7:0)-(p-u);return h.setDate(h.getDate()+g),h.setHours(23,59,59,999),h}(e,{weekStartsOn:1});break;case"month":n=function(t){pt(1,arguments);var e=gt(t);return e.setDate(1),e.setHours(0,0,0,0),e}(e),i=function(t){pt(1,arguments);var e=gt(t),n=e.getMonth();return e.setFullYear(e.getFullYear(),n+1,0),e.setHours(23,59,59,999),e}(e);break;case"year":n=function(t){pt(1,arguments);var e=gt(t),n=new Date(0);return n.setFullYear(e.getFullYear(),0,1),n.setHours(0,0,0,0),n}(e),i=function(t){pt(1,arguments);var e=gt(t),n=e.getFullYear();return e.setFullYear(n+1,0,0),e.setHours(23,59,59,999),e}(e)}return this._applyConstraints(n,i)}_applyConstraints(t,e){const n=Et(new Date);let i=t,o=e;if(this.config.min_date){const t=$e(this.config.min_date);xe(i,t)&&(i=t),xe(o,t)&&(o=t)}return this.config.disable_future&&(_e(o,n)&&(o=n),_e(i,n)&&(i=n)),{start:i,end:o}}_canNavigatePrev(){if("custom"===this.selectedPreset)return!1;if(!this.config.min_date)return!0;const t=$e(this.config.min_date);let e;switch(this.selectedPreset){case"day":e=ft(this.currentStartDate,-1);break;case"week":e=_t(this.currentStartDate,-1);break;case"month":e=vt(this.currentStartDate,-1);break;case"year":e=xt(this.currentStartDate,-1);break;default:return!0}return!xe(e,t)}_canNavigateNext(){if("custom"===this.selectedPreset)return!1;if(!this.config.disable_future)return!0;const t=new Date;let e;switch(this.selectedPreset){case"day":e=ft(this.currentEndDate,1);break;case"week":e=_t(this.currentEndDate,1);break;case"month":e=vt(this.currentEndDate,1);break;case"year":e=xt(this.currentEndDate,1);break;default:return!0}return!_e(e,t)}_isRangeModeVisible(t){return"custom"===t?!0===this.config.show_custom_range:!1!==this.config.visible_range_modes?.[t]}_getVisibleRangeModes(){const t=[];return this._isRangeModeVisible("day")&&t.push("day"),this._isRangeModeVisible("week")&&t.push("week"),this._isRangeModeVisible("month")&&t.push("month"),this._isRangeModeVisible("year")&&t.push("year"),t}_shouldShowRangeButton(t){if(!this._isRangeModeVisible(t))return!1;if(!this.config.show_custom_range){if(1===this._getVisibleRangeModes().length)return!1}return!0}async _setDateRange(t,e){if(this.isUpdating)return;this.isUpdating=!0,this.currentStartDate=t,this.currentEndDate=e;const n=we(t,"yyyy-MM-dd"),i=we(e,"yyyy-MM-dd");try{if(await this.hass.callService("input_datetime","set_datetime",{entity_id:this.config.start_entity,date:n}),await this.hass.callService("input_datetime","set_datetime",{entity_id:this.config.end_entity,date:i}),this.config.range_entity){const n=St(e,t)+1;await this.hass.callService("input_number","set_value",{entity_id:this.config.range_entity,value:n})}if(this.config.offset_entity){const e=St(t,wt(new Date));await this.hass.callService("input_number","set_value",{entity_id:this.config.offset_entity,value:e})}}catch(t){console.error("Error setting date range:",t)}finally{setTimeout(()=>{this.isUpdating=!1},100)}}_handleCustomStartChange(t){const e=t.detail.value;if(e){const t=$e(e);let n=this.currentEndDate;_e(t,this.currentEndDate)&&(n=t),this._setDateRange(t,n)}}_handleCustomEndChange(t){const e=t.detail.value;if(e){const t=$e(e);this._setDateRange(this.currentStartDate,t)}}_getTodayButtonLabel(){switch(this.selectedPreset){case"day":case"custom":default:return"Today";case"week":return"This Week";case"month":return"This Month";case"year":return"This Year"}}_toggleFloatingPopup(){this.showFloatingPopup=!this.showFloatingPopup}_closeFloatingPopup(){this.showFloatingPopup=!1}_isTodayRangeActive(){if("custom"===this.selectedPreset)return!1;const t=new Date,{start:e,end:n}=this._calculatePresetRange(this.selectedPreset,t),i=we(this.currentStartDate,"yyyy-MM-dd"),o=we(this.currentEndDate,"yyyy-MM-dd"),a=we(e,"yyyy-MM-dd"),r=we(n,"yyyy-MM-dd");return i===a&&o===r}_isEditMode(){if("undefined"!=typeof window){if(window.location.href.includes("edit=1"))return!0;let t=this.parentElement;for(;t;){if(t.classList?.contains("edit-mode"))return!0;t=t.parentElement}}return!1}_formatDateRange(){try{const t=we(this.currentStartDate,"MMMM d, yyyy"),e=we(this.currentEndDate,"MMMM d, yyyy");return t===e?t:`${t} - ${e}`}catch(t){return"Invalid date range"}}render(){if(!this.config||!this.hass)return Y``;const t=this.config.hide_background?"no-background":"",e="compact"===this.config.display_mode,n="in-header"===this.config.display_mode,i=!this.config.hide_date_display,o=this.config.date_display_position||"above",a=!0===this.config.use_button_group,r=!0===this.config.floating_mode&&!this._isEditMode(),s=()=>i?e?Y`
           <div class="date-range-display compact">
             ${this._formatDateRange()}
           </div>
         `:Y`
-        <div class="date-range-display">
-          ${this._formatDateRange()}
-        </div>
+        <div class="date-range-display">${this._formatDateRange()}</div>
       `:Y``,l=()=>Y`
       <div class="button-row ${a?"button-group":""}">
         ${this.config.show_arrows?Y`
@@ -578,7 +576,6 @@ function t(t,e,n,i){var o,a=arguments.length,r=a<3?e:null===i?i=Object.getOwnPro
                 Day
               </button>
             `:""}
-
         ${this._shouldShowRangeButton("week")?Y`
               <button
                 class="preset-button ${"week"===this.selectedPreset?"active":""}"
@@ -588,7 +585,6 @@ function t(t,e,n,i){var o,a=arguments.length,r=a<3?e:null===i?i=Object.getOwnPro
                 Week
               </button>
             `:""}
-
         ${this._shouldShowRangeButton("month")?Y`
               <button
                 class="preset-button ${"month"===this.selectedPreset?"active":""}"
@@ -598,7 +594,6 @@ function t(t,e,n,i){var o,a=arguments.length,r=a<3?e:null===i?i=Object.getOwnPro
                 Month
               </button>
             `:""}
-
         ${this._shouldShowRangeButton("year")?Y`
               <button
                 class="preset-button ${"year"===this.selectedPreset?"active":""}"
@@ -608,7 +603,6 @@ function t(t,e,n,i){var o,a=arguments.length,r=a<3?e:null===i?i=Object.getOwnPro
                 Year
               </button>
             `:""}
-
         ${this.config.show_custom_range?Y`
               <button
                 class="preset-button ${"custom"===this.selectedPreset?"active":""}"
@@ -618,7 +612,6 @@ function t(t,e,n,i){var o,a=arguments.length,r=a<3?e:null===i?i=Object.getOwnPro
                 Custom
               </button>
             `:""}
-
         ${this.config.show_arrows?Y`
               <button
                 class="nav-button"
@@ -681,29 +674,40 @@ function t(t,e,n,i){var o,a=arguments.length,r=a<3?e:null===i?i=Object.getOwnPro
           </button>
 
           ${this.showFloatingPopup?Y`
-                <div class="floating-popup-overlay" @click=${this._closeFloatingPopup}>
-                  <div class="floating-popup" @click=${t=>t.stopPropagation()}>
+                <div
+                  class="floating-popup-overlay"
+                  @click=${this._closeFloatingPopup}
+                >
+                  <div
+                    class="floating-popup"
+                    @click=${t=>t.stopPropagation()}
+                  >
                     <div class="popup-header">
                       <div class="popup-header-content">
-                        ${this.config.popup_icon?Y`<ha-icon icon="${this.config.popup_icon}"></ha-icon>`:""}
-                        <h3>${this.config.popup_title||"Date Range Selector"}</h3>
+                        ${this.config.popup_icon?Y`<ha-icon
+                              icon="${this.config.popup_icon}"
+                            ></ha-icon>`:""}
+                        <h3>
+                          ${this.config.popup_title||"Date Range Selector"}
+                        </h3>
                       </div>
-                      <button class="close-button" @click=${this._closeFloatingPopup}>
+                      <button
+                        class="close-button"
+                        @click=${this._closeFloatingPopup}
+                      >
                         <ha-icon icon="mdi:close"></ha-icon>
                       </button>
                     </div>
-                    <div class="popup-content">
-                      ${c()}
-                    </div>
+                    <div class="popup-content">${c()}</div>
                   </div>
                 </div>
               `:""}
         </div>
       `}return Y`
-      <ha-card class="${t} ${e?"compact-mode":""} ${n?"in-header-mode":""}">
-        <div class="card-content">
-          ${c()}
-        </div>
+      <ha-card
+        class="${t} ${e?"compact-mode":""} ${n?"in-header-mode":""}"
+      >
+        <div class="card-content">${c()}</div>
       </ha-card>
     `}static get styles(){return r`
       :host {
@@ -712,7 +716,10 @@ function t(t,e,n,i){var o,a=arguments.length,r=a<3?e:null===i?i=Object.getOwnPro
 
       ha-card {
         padding: 16px;
-        background: var(--ha-card-background, var(--card-background-color, white));
+        background: var(
+          --ha-card-background,
+          var(--card-background-color, white)
+        );
         border-radius: var(--ha-card-border-radius, 12px);
         box-shadow: var(
           --ha-card-box-shadow,
@@ -898,7 +905,7 @@ function t(t,e,n,i){var o,a=arguments.length,r=a<3?e:null===i?i=Object.getOwnPro
         color: var(--secondary-text-color);
       }
 
-      .picker-group input[type='date'],
+      .picker-group input[type="date"],
       .picker-group ha-date-input {
         padding: 10px;
         border: 1px solid var(--divider-color, #e0e0e0);
@@ -1018,7 +1025,10 @@ function t(t,e,n,i){var o,a=arguments.length,r=a<3?e:null===i?i=Object.getOwnPro
       }
 
       .floating-popup {
-        background: var(--ha-card-background, var(--card-background-color, white));
+        background: var(
+          --ha-card-background,
+          var(--card-background-color, white)
+        );
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         max-width: 600px;

@@ -1,19 +1,19 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { PopupWrapperCardConfig } from './popup-wrapper-card';
-import { HomeAssistant } from './types';
+import { LitElement, html, css } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { PopupWrapperCardConfig } from "./popup-wrapper-card";
+import { HomeAssistant } from "./types";
 
 // Load HA components
 const loadHaComponents = async () => {
-  if (customElements.get('ha-selector')) return;
+  if (customElements.get("ha-selector")) return;
   const helpers = await (window as any).loadCardHelpers?.();
   if (!helpers) return;
-  const card = await helpers.createCardElement({ type: 'entity' });
+  const card = await helpers.createCardElement({ type: "entity" });
   if (!card) return;
   await card.getConfigElement();
 };
 
-@customElement('popup-wrapper-editor')
+@customElement("popup-wrapper-editor")
 export class PopupWrapperEditor extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private config!: PopupWrapperCardConfig;
@@ -29,16 +29,16 @@ export class PopupWrapperEditor extends LitElement {
 
   public static getStubConfig(): PopupWrapperCardConfig {
     return {
-      type: 'custom:popup-wrapper-card',
-      trigger_type: 'floating',
-      floating_button_position: 'bottom-right',
-      floating_button_icon: 'mdi:card',
-      floating_button_text: '',
-      popup_title: 'Card',
+      type: "custom:popup-wrapper-card",
+      trigger_type: "floating",
+      floating_button_position: "bottom-right",
+      floating_button_icon: "mdi:card",
+      floating_button_text: "",
+      popup_title: "Card",
       auto_open: false,
       close_on_click_outside: true,
       card: {
-        type: 'entities',
+        type: "entities",
         entities: [],
       },
     };
@@ -58,17 +58,18 @@ export class PopupWrapperEditor extends LitElement {
 
     let newConfig: PopupWrapperCardConfig;
 
-    if (target.value === '' || target.value === undefined) {
+    if (target.value === "" || target.value === undefined) {
       newConfig = { ...this.config };
       delete newConfig[configValue];
     } else {
       newConfig = {
         ...this.config,
-        [configValue]: target.checked !== undefined ? target.checked : target.value,
+        [configValue]:
+          target.checked !== undefined ? target.checked : target.value,
       };
     }
 
-    const event = new CustomEvent('config-changed', {
+    const event = new CustomEvent("config-changed", {
       detail: { config: newConfig },
       bubbles: true,
       composed: true,
@@ -82,18 +83,18 @@ export class PopupWrapperEditor extends LitElement {
     }
 
     const value = ev.detail.value;
-    
+
     const newConfig: PopupWrapperCardConfig = {
       ...this.config,
     };
 
-    if (!value || value === '') {
+    if (!value || value === "") {
       delete newConfig[configKey];
     } else {
       newConfig[configKey] = value;
     }
 
-    const event = new CustomEvent('config-changed', {
+    const event = new CustomEvent("config-changed", {
       detail: { config: newConfig },
       bubbles: true,
       composed: true,
@@ -103,10 +104,10 @@ export class PopupWrapperEditor extends LitElement {
 
   private _handleGUIEditor(): void {
     // Open the GUI editor for the wrapped card
-    const event = new CustomEvent('ll-custom', {
+    const event = new CustomEvent("ll-custom", {
       detail: {
-        type: 'gui-editor',
-        path: ['card'],
+        type: "gui-editor",
+        path: ["card"],
       },
       bubbles: true,
       composed: true,
@@ -119,12 +120,12 @@ export class PopupWrapperEditor extends LitElement {
       return html``;
     }
 
-    const triggerType = this.config.trigger_type || 'floating';
+    const triggerType = this.config.trigger_type || "floating";
 
     return html`
       <div class="card-config">
         <h3>Wrapped Card Configuration</h3>
-        
+
         <!-- Card Configuration -->
         <div class="config-row">
           <label>Card to Display in Popup</label>
@@ -147,14 +148,12 @@ export class PopupWrapperEditor extends LitElement {
           <input
             type="text"
             id="popup_title"
-            .configValue=${'popup_title'}
-            .value=${this.config.popup_title || 'Card'}
+            .configValue=${"popup_title"}
+            .value=${this.config.popup_title || "Card"}
             @input=${this._valueChanged}
             placeholder="Card"
           />
-          <div class="helper-text">
-            Title displayed in the popup header
-          </div>
+          <div class="helper-text">Title displayed in the popup header</div>
         </div>
 
         <!-- Popup Icon -->
@@ -163,8 +162,9 @@ export class PopupWrapperEditor extends LitElement {
           <ha-selector
             .hass=${this.hass}
             .selector=${{ icon: {} }}
-            .value=${this.config.popup_icon || ''}
-            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'popup_icon')}
+            .value=${this.config.popup_icon || ""}
+            @value-changed=${(e: CustomEvent) =>
+              this._entityChanged(e, "popup_icon")}
           ></ha-selector>
           <div class="helper-text">
             Icon to display in the popup header next to the title
@@ -181,7 +181,7 @@ export class PopupWrapperEditor extends LitElement {
             <input
               type="checkbox"
               id="close_on_click_outside"
-              .configValue=${'close_on_click_outside'}
+              .configValue=${"close_on_click_outside"}
               .checked=${this.config.close_on_click_outside !== false}
               @change=${this._valueChanged}
             />
@@ -198,20 +198,18 @@ export class PopupWrapperEditor extends LitElement {
           <label for="trigger_type">Trigger Type</label>
           <select
             id="trigger_type"
-            .configValue=${'trigger_type'}
-            .value=${this.config.trigger_type || 'floating'}
+            .configValue=${"trigger_type"}
+            .value=${this.config.trigger_type || "floating"}
             @change=${this._valueChanged}
           >
             <option value="floating">Floating Button</option>
             <option value="entity">Entity Card (Click to Open)</option>
             <option value="auto">Auto Open (No Trigger)</option>
           </select>
-          <div class="helper-text">
-            How the popup will be opened
-          </div>
+          <div class="helper-text">How the popup will be opened</div>
         </div>
 
-        ${triggerType === 'floating'
+        ${triggerType === "floating"
           ? html`
               <hr />
               <h3>Floating Button Settings</h3>
@@ -221,8 +219,9 @@ export class PopupWrapperEditor extends LitElement {
                 <label for="floating_button_position">Button Position</label>
                 <select
                   id="floating_button_position"
-                  .configValue=${'floating_button_position'}
-                  .value=${this.config.floating_button_position || 'bottom-right'}
+                  .configValue=${"floating_button_position"}
+                  .value=${this.config.floating_button_position ||
+                  "bottom-right"}
                   @change=${this._valueChanged}
                 >
                   <option value="top-left">Top Left</option>
@@ -241,8 +240,9 @@ export class PopupWrapperEditor extends LitElement {
                 <ha-selector
                   .hass=${this.hass}
                   .selector=${{ icon: {} }}
-                  .value=${this.config.floating_button_icon || 'mdi:card'}
-                  @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'floating_button_icon')}
+                  .value=${this.config.floating_button_icon || "mdi:card"}
+                  @value-changed=${(e: CustomEvent) =>
+                    this._entityChanged(e, "floating_button_icon")}
                 ></ha-selector>
                 <div class="helper-text">
                   Icon to display on the floating button
@@ -255,19 +255,19 @@ export class PopupWrapperEditor extends LitElement {
                 <input
                   type="text"
                   id="floating_button_text"
-                  .configValue=${'floating_button_text'}
-                  .value=${this.config.floating_button_text || ''}
+                  .configValue=${"floating_button_text"}
+                  .value=${this.config.floating_button_text || ""}
                   @input=${this._valueChanged}
                   placeholder="Leave empty to show icon"
                 />
                 <div class="helper-text">
-                  Optional text to display on the floating button (shown next to the icon)
+                  Optional text to display on the floating button (shown next to
+                  the icon)
                 </div>
               </div>
             `
-          : ''}
-
-        ${triggerType === 'entity'
+          : ""}
+        ${triggerType === "entity"
           ? html`
               <hr />
               <h3>Entity Trigger Settings</h3>
@@ -278,17 +278,18 @@ export class PopupWrapperEditor extends LitElement {
                 <ha-selector
                   .hass=${this.hass}
                   .selector=${{ entity: {} }}
-                  .value=${this.config.trigger_entity || ''}
-                  @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'trigger_entity')}
+                  .value=${this.config.trigger_entity || ""}
+                  @value-changed=${(e: CustomEvent) =>
+                    this._entityChanged(e, "trigger_entity")}
                 ></ha-selector>
                 <div class="helper-text">
-                  Entity to display as the trigger. Click on it to open the popup.
+                  Entity to display as the trigger. Click on it to open the
+                  popup.
                 </div>
               </div>
             `
-          : ''}
-
-        ${triggerType === 'auto'
+          : ""}
+        ${triggerType === "auto"
           ? html`
               <hr />
               <h3>Auto Open Settings</h3>
@@ -303,7 +304,7 @@ export class PopupWrapperEditor extends LitElement {
                   <input
                     type="checkbox"
                     id="auto_open"
-                    .configValue=${'auto_open'}
+                    .configValue=${"auto_open"}
                     .checked=${this.config.auto_open === true}
                     @change=${this._valueChanged}
                   />
@@ -311,7 +312,7 @@ export class PopupWrapperEditor extends LitElement {
                 </label>
               </div>
             `
-          : ''}
+          : ""}
       </div>
     `;
   }
@@ -348,7 +349,7 @@ export class PopupWrapperEditor extends LitElement {
         color: var(--primary-text-color);
       }
 
-      input[type='text'],
+      input[type="text"],
       select,
       ha-selector {
         width: 100%;
@@ -367,7 +368,7 @@ export class PopupWrapperEditor extends LitElement {
         border: none;
       }
 
-      input[type='text']:focus,
+      input[type="text"]:focus,
       select:focus {
         outline: none;
         border-color: var(--primary-color);
@@ -399,7 +400,7 @@ export class PopupWrapperEditor extends LitElement {
         font-size: 14px;
       }
 
-      .checkbox-label input[type='checkbox'] {
+      .checkbox-label input[type="checkbox"] {
         width: auto;
         height: auto;
         margin: 0;

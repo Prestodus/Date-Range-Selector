@@ -5,19 +5,23 @@ export interface DateRangeSelectorCardConfig extends Record<string, any> {
   range_entity?: string; // New: entity for storing range (number of days)
   offset_entity?: string; // New: entity for storing offset (days from start)
   show_arrows?: boolean;
-  today_button_type?: 'icon' | 'text';
+  today_button_type?: "icon" | "text";
   hide_background?: boolean;
   hide_date_display?: boolean;
-  date_display_position?: 'above' | 'below';
+  date_display_position?: "above" | "below";
   show_custom_range?: boolean;
   disable_future?: boolean;
   min_date?: string;
-  display_mode?: 'default' | 'compact' | 'in-header'; // New: display mode
+  display_mode?: "default" | "compact" | "in-header"; // New: display mode
   visible_range_modes?: RangeModeVisibility; // New: which range modes to show
   default_range_mode?: PresetType; // New: default range mode selection
   use_button_group?: boolean; // New: use connected button groups
   floating_mode?: boolean; // New: enable floating button with popup
-  floating_button_position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; // New: position of floating button
+  floating_button_position?:
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right"; // New: position of floating button
   floating_button_icon?: string; // New: custom icon for floating button
   floating_button_text?: string; // New: custom text for floating button
   popup_title?: string; // New: custom title for floating popup
@@ -31,7 +35,7 @@ export interface RangeModeVisibility {
   year?: boolean;
 }
 
-export type PresetType = 'day' | 'week' | 'month' | 'year' | 'custom';
+export type PresetType = "day" | "week" | "month" | "year" | "custom";
 
 export interface HomeAssistant {
   callService(domain: string, service: string, data?: any): Promise<void>;
@@ -58,8 +62,8 @@ export interface HassEntity {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'date-range-selector-card': any;
-    'date-range-selector-editor': any;
+    "date-range-selector-card": any;
+    "date-range-selector-editor": any;
   }
 }
 
