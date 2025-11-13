@@ -14,6 +14,7 @@ export interface PopupWrapperCardConfig extends Record<string, any> {
   floating_button_icon?: string;
   floating_button_text?: string;
   popup_title?: string; // Title for the popup
+  popup_icon?: string; // Icon for the popup header
   auto_open?: boolean; // Auto-open on load
   close_on_click_outside?: boolean; // Close popup when clicking outside
 }
@@ -62,7 +63,24 @@ export class PopupWrapperCard extends LitElement {
       ...config,
     };
 
-    this._createWrappedCard();
+    // Don't create wrapped card immediately - wait until it's needed
+    // This prevents issues in preview/edit mode
+  }
+
+  private _isEditMode(): boolean {
+    // Check if we're in edit mode by looking at the URL or panel state
+    if (typeof window !== 'undefined') {
+      const url = window.location.href;
+      if (url.includes('edit=1')) return true;
+      
+      // Check if any parent has edit-mode class
+      let element = this.parentElement;
+      while (element) {
+        if (element.classList?.contains('edit-mode')) return true;
+        element = element.parentElement;
+      }
+    }
+    return false;
   }
 
   public getCardSize(): number {
@@ -107,6 +125,10 @@ export class PopupWrapperCard extends LitElement {
 
   private _togglePopup(): void {
     this.showPopup = !this.showPopup;
+    // Create wrapped card when popup is first opened
+    if (this.showPopup && !this.wrappedCard && !this._isEditMode()) {
+      this._createWrappedCard();
+    }
   }
 
   private _closePopup(): void {
@@ -129,11 +151,12 @@ export class PopupWrapperCard extends LitElement {
 
       return html`
         <button
-          class="floating-button ${position}"
+          class="floating-button ${position} ${text ? 'with-text' : ''}"
           @click=${this._togglePopup}
           title="${this.config.popup_title || 'Open Card'}"
         >
-          ${text ? html`<span>${text}</span>` : html`<ha-icon icon="${icon}"></ha-icon>`}
+          <ha-icon icon="${icon}"></ha-icon>
+          ${text ? html`<span class="button-text">${text}</span>` : ''}
         </button>
       `;
     }
@@ -168,17 +191,25 @@ export class PopupWrapperCard extends LitElement {
   private _renderPopup() {
     if (!this.showPopup) return html``;
 
+    const isEdit = this._isEditMode();
+    const cardContent = isEdit 
+      ? html`<p style="padding: 20px; text-align: center; color: var(--secondary-text-color);">Card preview will be shown when popup is opened</p>`
+      : (this.wrappedCard || html`<p>Loading card...</p>`);
+
     return html`
       <div class="popup-overlay" @click=${this._handleOverlayClick}>
         <div class="popup" @click=${(e: Event) => e.stopPropagation()}>
           <div class="popup-header">
-            <h3>${this.config.popup_title || 'Card'}</h3>
+            <div class="popup-header-content">
+              ${this.config.popup_icon ? html`<ha-icon icon="${this.config.popup_icon}"></ha-icon>` : ''}
+              <h3>${this.config.popup_title || 'Card'}</h3>
+            </div>
             <button class="close-button" @click=${this._closePopup}>
               <ha-icon icon="mdi:close"></ha-icon>
             </button>
           </div>
           <div class="popup-content">
-            ${this.wrappedCard || html`<p>Loading card...</p>`}
+            ${cardContent}
           </div>
         </div>
       </div>
@@ -188,6 +219,19 @@ export class PopupWrapperCard extends LitElement {
   protected render() {
     if (!this.config || !this.hass) {
       return html``;
+    }
+
+    const isEdit = this._isEditMode();
+    
+    // In edit mode, show a simple placeholder for floating trigger
+    if (isEdit && this.config.trigger_type === 'floating') {
+      return html`
+        <div class="edit-mode-placeholder">
+          <ha-icon icon="${this.config.floating_button_icon || 'mdi:card'}"></ha-icon>
+          <p>Popup Wrapper Card</p>
+          <span>${this.config.popup_title || 'Card'}</span>
+        </div>
+      `;
     }
 
     return html`
@@ -202,6 +246,31 @@ export class PopupWrapperCard extends LitElement {
     return css`
       :host {
         display: block;
+      }
+
+      .edit-mode-placeholder {
+        padding: 20px;
+        text-align: center;
+        background: var(--ha-card-background, var(--card-background-color, white));
+        border-radius: 8px;
+        border: 2px dashed var(--divider-color, #e0e0e0);
+      }
+
+      .edit-mode-placeholder ha-icon {
+        --mdc-icon-size: 48px;
+        color: var(--primary-color);
+        margin-bottom: 8px;
+      }
+
+      .edit-mode-placeholder p {
+        margin: 8px 0 4px 0;
+        font-weight: 600;
+        color: var(--primary-text-color);
+      }
+
+      .edit-mode-placeholder span {
+        font-size: 14px;
+        color: var(--secondary-text-color);
       }
 
       .popup-wrapper-container {
@@ -227,6 +296,7 @@ export class PopupWrapperCard extends LitElement {
         font-size: 14px;
         font-weight: 500;
         padding: 0;
+        gap: 8px;
       }
 
       .floating-button:hover {
@@ -238,8 +308,13 @@ export class PopupWrapperCard extends LitElement {
         --mdc-icon-size: 24px;
       }
 
-      .floating-button span {
-        padding: 0 8px;
+      .floating-button.with-text {
+        width: auto;
+        border-radius: 28px;
+        padding: 0 20px 0 16px;
+      }
+
+      .floating-button .button-text {
         white-space: nowrap;
       }
 
@@ -365,6 +440,17 @@ export class PopupWrapperCard extends LitElement {
         top: 0;
         background: var(--ha-card-background, var(--card-background-color, white));
         z-index: 1;
+      }
+
+      .popup-header-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .popup-header-content ha-icon {
+        --mdc-icon-size: 24px;
+        color: var(--primary-color);
       }
 
       .popup-header h3 {

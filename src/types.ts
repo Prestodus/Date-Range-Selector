@@ -20,6 +20,8 @@ export interface DateRangeSelectorCardConfig extends Record<string, any> {
   floating_button_position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; // New: position of floating button
   floating_button_icon?: string; // New: custom icon for floating button
   floating_button_text?: string; // New: custom text for floating button
+  popup_title?: string; // New: custom title for floating popup
+  popup_icon?: string; // New: custom icon for floating popup header
 }
 
 export interface RangeModeVisibility {

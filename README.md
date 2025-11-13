@@ -150,7 +150,9 @@ end_entity: input_datetime.date_range_end
 floating_mode: true
 floating_button_position: bottom-right
 floating_button_icon: mdi:calendar-range
+floating_button_text: Select Range
 popup_title: Date Range Selector
+popup_icon: mdi:calendar-range
 ```
 
 #### Full Configuration Example
@@ -188,7 +190,9 @@ type: custom:popup-wrapper-card
 trigger_type: floating
 floating_button_position: bottom-right
 floating_button_icon: mdi:chart-line
+floating_button_text: Charts
 popup_title: My Charts
+popup_icon: mdi:chart-line
 card:
   type: custom:apexcharts-card
   series:
@@ -242,11 +246,13 @@ card:
 | `disable_future` | boolean | `false` | Prevent selection of future dates (caps at today) |
 | `min_date` | string | - | Minimum selectable date in `YYYY-MM-DD` format |
 | `display_mode` | string | `default` | Display mode: `default`, `compact`, or `in-header` |
-| `use_button_group` | boolean | `false` | Use connected button group style (NEW!) |
-| `floating_mode` | boolean | `false` | Show as floating button with popup (NEW!) |
+| `use_button_group` | boolean | `false` | Use connected button group style |
+| `floating_mode` | boolean | `false` | Show as floating button with popup |
 | `floating_button_position` | string | `bottom-right` | Position: `top-left`, `top-right`, `bottom-left`, `bottom-right` |
 | `floating_button_icon` | string | `mdi:calendar-range` | Icon for floating button |
-| `floating_button_text` | string | - | Optional text for floating button (overrides icon) |
+| `floating_button_text` | string | - | Optional text for floating button (shown alongside icon) |
+| `popup_title` | string | `Date Range Selector` | Title displayed in the popup header (floating mode only) |
+| `popup_icon` | string | - | Optional icon for the popup header (floating mode only) |
 | `visible_range_modes` | object | All `true` | Control which range mode buttons to show (day/week/month/year) |
 | `default_range_mode` | string | - | Default range mode on load (day/week/month/year). Defaults to smallest visible if not set |
 
@@ -258,11 +264,12 @@ card:
 | `trigger_type` | string | `floating` | How to open popup: `floating`, `entity`, or `auto` |
 | `trigger_entity` | string | - | Entity to display as trigger (for `entity` mode) |
 | `popup_title` | string | `Card` | Title displayed in the popup header |
+| `popup_icon` | string | - | Optional icon for the popup header |
 | `close_on_click_outside` | boolean | `true` | Close popup when clicking outside |
 | `auto_open` | boolean | `false` | Auto-open popup on dashboard load (for `auto` mode) |
 | `floating_button_position` | string | `bottom-right` | Position: `top-left`, `top-right`, `bottom-left`, `bottom-right` |
 | `floating_button_icon` | string | `mdi:card` | Icon for floating button (for `floating` mode) |
-| `floating_button_text` | string | - | Optional text for floating button (overrides icon) |
+| `floating_button_text` | string | - | Optional text for floating button (shown alongside icon) |
 
 ### Option Details
 
