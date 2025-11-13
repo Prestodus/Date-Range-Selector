@@ -43,7 +43,7 @@ export class DateRangeSelectorEditor extends LitElement {
 
     const target = ev.target as any;
     // Prefer explicit .configValue property, fall back to data-config-value or element id
-    let configValue: string | undefined =
+    const configValue: string | undefined =
       target.configValue || target.dataset?.configValue || target.id;
 
     if (!configValue) {
