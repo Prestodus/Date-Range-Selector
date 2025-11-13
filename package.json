@@ -8,7 +8,9 @@
     "build": "rollup -c",
     "watch": "rollup -c -w",
     "lint": "eslint src --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepare": "husky install",
+    "release:local": "npm ci && npm run build && git add dist && git commit -m \"chore(release): build dist for v${npm_package_version}\" || echo 'No changes to commit'"
   },
   "keywords": [
     "home-assistant",
@@ -32,9 +34,21 @@
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "eslint": "^8.56.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^14.0.1",
     "prettier": "^3.1.1",
     "rollup": "^4.9.0",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3"
+  },
+  "husky": {
+    "hooks": {}
+  },
+  "lint-staged": {
+    "src/**/*.{ts,js}": [
+      "npm run lint",
+      "npm run format",
+      "git add"
+    ]
   }
 }

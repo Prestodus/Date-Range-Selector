@@ -1,3 +1,19 @@
+node_modules/
+/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+.vscode/
+/.idea/
+*.sublime-workspace
+/.pnp
+.pnp.js
+
+# Optional: ignore local env files
+.env
+.env.local
 # Dependencies
 node_modules/
 

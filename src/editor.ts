@@ -1,18 +1,18 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { DateRangeSelectorCardConfig, HomeAssistant } from './types';
+import { LitElement, html, css } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { DateRangeSelectorCardConfig, HomeAssistant } from "./types";
 
 // Load HA components
 const loadHaComponents = async () => {
-  if (customElements.get('ha-selector')) return;
+  if (customElements.get("ha-selector")) return;
   const helpers = await (window as any).loadCardHelpers?.();
   if (!helpers) return;
-  const card = await helpers.createCardElement({ type: 'entity' });
+  const card = await helpers.createCardElement({ type: "entity" });
   if (!card) return;
   await card.getConfigElement();
 };
 
-@customElement('date-range-selector-editor')
+@customElement("date-range-selector-editor")
 export class DateRangeSelectorEditor extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private config!: DateRangeSelectorCardConfig;
@@ -28,11 +28,11 @@ export class DateRangeSelectorEditor extends LitElement {
 
   public static getStubConfig(): DateRangeSelectorCardConfig {
     return {
-      type: 'custom:date-range-selector-card',
-      start_entity: '',
-      end_entity: '',
+      type: "custom:date-range-selector-card",
+      start_entity: "",
+      end_entity: "",
       show_arrows: true,
-      today_button_type: 'icon',
+      today_button_type: "icon",
     };
   }
 
@@ -42,7 +42,9 @@ export class DateRangeSelectorEditor extends LitElement {
     }
 
     const target = ev.target as any;
-    const configValue = target.configValue;
+    // Prefer explicit .configValue property, fall back to data-config-value or element id
+    let configValue: string | undefined =
+      target.configValue || target.dataset?.configValue || target.id;
 
     if (!configValue) {
       return;
@@ -50,17 +52,18 @@ export class DateRangeSelectorEditor extends LitElement {
 
     let newConfig: DateRangeSelectorCardConfig;
 
-    if (target.value === '' || target.value === undefined) {
+    if (target.value === "" || target.value === undefined) {
       newConfig = { ...this.config };
       delete newConfig[configValue];
     } else {
       newConfig = {
         ...this.config,
-        [configValue]: target.checked !== undefined ? target.checked : target.value,
+        [configValue]:
+          target.checked !== undefined ? target.checked : target.value,
       };
     }
 
-    const event = new CustomEvent('config-changed', {
+    const event = new CustomEvent("config-changed", {
       detail: { config: newConfig },
       bubbles: true,
       composed: true,
@@ -88,7 +91,7 @@ export class DateRangeSelectorEditor extends LitElement {
       },
     };
 
-    const event = new CustomEvent('config-changed', {
+    const event = new CustomEvent("config-changed", {
       detail: { config: newConfig },
       bubbles: true,
       composed: true,
@@ -102,19 +105,19 @@ export class DateRangeSelectorEditor extends LitElement {
     }
 
     const value = ev.detail.value;
-    
+
     const newConfig: DateRangeSelectorCardConfig = {
       ...this.config,
     };
 
     // If value is empty or undefined, remove the key from config
-    if (!value || value === '') {
+    if (!value || value === "") {
       delete newConfig[configKey];
     } else {
       newConfig[configKey] = value;
     }
 
-    const event = new CustomEvent('config-changed', {
+    const event = new CustomEvent("config-changed", {
       detail: { config: newConfig },
       bubbles: true,
       composed: true,
@@ -130,15 +133,16 @@ export class DateRangeSelectorEditor extends LitElement {
     return html`
       <div class="card-config">
         <h3>Required Entities</h3>
-        
+
         <!-- Start Entity -->
         <div class="config-row">
           <label for="start_entity">Start Entity</label>
           <ha-selector
             .hass=${this.hass}
-            .selector=${{ entity: { domain: ['input_datetime'] } }}
-            .value=${this.config.start_entity || ''}
-            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'start_entity')}
+            .selector=${{ entity: { domain: ["input_datetime"] } }}
+            .value=${this.config.start_entity || ""}
+            @value-changed=${(e: CustomEvent) =>
+              this._entityChanged(e, "start_entity")}
           ></ha-selector>
           <div class="helper-text">
             Entity for the start date (must be an input_datetime helper)
@@ -150,9 +154,10 @@ export class DateRangeSelectorEditor extends LitElement {
           <label for="end_entity">End Entity</label>
           <ha-selector
             .hass=${this.hass}
-            .selector=${{ entity: { domain: ['input_datetime'] } }}
-            .value=${this.config.end_entity || ''}
-            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'end_entity')}
+            .selector=${{ entity: { domain: ["input_datetime"] } }}
+            .value=${this.config.end_entity || ""}
+            @value-changed=${(e: CustomEvent) =>
+              this._entityChanged(e, "end_entity")}
           ></ha-selector>
           <div class="helper-text">
             Entity for the end date (must be an input_datetime helper)
@@ -167,7 +172,8 @@ export class DateRangeSelectorEditor extends LitElement {
         <div class="config-row">
           <label>Visible Range Modes</label>
           <div class="helper-text">
-            Choose which range mode buttons to display (at least one must be active)
+            Choose which range mode buttons to display (at least one must be
+            active)
           </div>
           <div class="checkbox-group">
             <label class="checkbox-label">
@@ -214,8 +220,8 @@ export class DateRangeSelectorEditor extends LitElement {
           <label for="default_range_mode">Default Range Mode</label>
           <select
             id="default_range_mode"
-            .configValue=${'default_range_mode'}
-            .value=${this.config.default_range_mode || ''}
+            .configValue=${"default_range_mode"}
+            .value=${this.config.default_range_mode || ""}
             @change=${this._valueChanged}
           >
             <option value="">Auto (Smallest Visible)</option>
@@ -225,7 +231,8 @@ export class DateRangeSelectorEditor extends LitElement {
             <option value="year">Year</option>
           </select>
           <div class="helper-text">
-            Default range mode to select on load (defaults to smallest visible if not set)
+            Default range mode to select on load (defaults to smallest visible
+            if not set)
           </div>
         </div>
 
@@ -233,13 +240,14 @@ export class DateRangeSelectorEditor extends LitElement {
         <div class="config-row checkbox-config">
           <label for="show_custom_range">Show Custom Range Option</label>
           <div class="helper-text">
-            Display a "Custom" button that reveals date pickers for manual selection
+            Display a "Custom" button that reveals date pickers for manual
+            selection
           </div>
           <label class="checkbox-label">
             <input
               type="checkbox"
               id="show_custom_range"
-              .configValue=${'show_custom_range'}
+              .configValue=${"show_custom_range"}
               .checked=${this.config.show_custom_range === true}
               @change=${this._valueChanged}
             />
@@ -256,8 +264,8 @@ export class DateRangeSelectorEditor extends LitElement {
           <label for="display_mode">Display Mode</label>
           <select
             id="display_mode"
-            .configValue=${'display_mode'}
-            .value=${this.config.display_mode || 'default'}
+            .configValue=${"display_mode"}
+            .value=${this.config.display_mode || "default"}
             @change=${this._valueChanged}
           >
             <option value="default">Default</option>
@@ -274,8 +282,8 @@ export class DateRangeSelectorEditor extends LitElement {
           <label for="today_button_type">Today Button Type</label>
           <select
             id="today_button_type"
-            .configValue=${'today_button_type'}
-            .value=${this.config.today_button_type || 'icon'}
+            .configValue=${"today_button_type"}
+            .value=${this.config.today_button_type || "icon"}
             @change=${this._valueChanged}
           >
             <option value="icon">Icon</option>
@@ -296,7 +304,7 @@ export class DateRangeSelectorEditor extends LitElement {
             <input
               type="checkbox"
               id="show_arrows"
-              .configValue=${'show_arrows'}
+              .configValue=${"show_arrows"}
               .checked=${this.config.show_arrows !== false}
               @change=${this._valueChanged}
             />
@@ -314,7 +322,7 @@ export class DateRangeSelectorEditor extends LitElement {
             <input
               type="checkbox"
               id="hide_background"
-              .configValue=${'hide_background'}
+              .configValue=${"hide_background"}
               .checked=${this.config.hide_background === true}
               @change=${this._valueChanged}
             />
@@ -326,13 +334,14 @@ export class DateRangeSelectorEditor extends LitElement {
         <div class="config-row checkbox-config">
           <label for="hide_date_display">Hide Date Display</label>
           <div class="helper-text">
-            Hide the date range display to show dates elsewhere in your dashboard
+            Hide the date range display to show dates elsewhere in your
+            dashboard
           </div>
           <label class="checkbox-label">
             <input
               type="checkbox"
               id="hide_date_display"
-              .configValue=${'hide_date_display'}
+              .configValue=${"hide_date_display"}
               .checked=${this.config.hide_date_display === true}
               @change=${this._valueChanged}
             />
@@ -345,8 +354,8 @@ export class DateRangeSelectorEditor extends LitElement {
           <label for="date_display_position">Date Display Position</label>
           <select
             id="date_display_position"
-            .configValue=${'date_display_position'}
-            .value=${this.config.date_display_position || 'above'}
+            .configValue=${"date_display_position"}
+            .value=${this.config.date_display_position || "above"}
             @change=${this._valueChanged}
           >
             <option value="above">Above Buttons</option>
@@ -371,7 +380,7 @@ export class DateRangeSelectorEditor extends LitElement {
             <input
               type="checkbox"
               id="disable_future"
-              .configValue=${'disable_future'}
+              .configValue=${"disable_future"}
               .checked=${this.config.disable_future === true}
               @change=${this._valueChanged}
             />
@@ -385,12 +394,13 @@ export class DateRangeSelectorEditor extends LitElement {
           <input
             type="date"
             id="min_date"
-            .configValue=${'min_date'}
-            .value=${this.config.min_date || ''}
+            .configValue=${"min_date"}
+            .value=${this.config.min_date || ""}
             @input=${this._valueChanged}
           />
           <div class="helper-text">
-            Earliest selectable date (YYYY-MM-DD format). Leave empty for no limit.
+            Earliest selectable date (YYYY-MM-DD format). Leave empty for no
+            limit.
           </div>
         </div>
 
@@ -403,12 +413,14 @@ export class DateRangeSelectorEditor extends LitElement {
           <label for="range_entity">Range Helper Entity</label>
           <ha-selector
             .hass=${this.hass}
-            .selector=${{ entity: { domain: ['input_number'] } }}
-            .value=${this.config.range_entity || ''}
-            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'range_entity')}
+            .selector=${{ entity: { domain: ["input_number"] } }}
+            .value=${this.config.range_entity || ""}
+            @value-changed=${(e: CustomEvent) =>
+              this._entityChanged(e, "range_entity")}
           ></ha-selector>
           <div class="helper-text">
-            Entity for storing the range in days (must be an input_number helper). Useful for ApexCharts integration.
+            Entity for storing the range in days (must be an input_number
+            helper). Useful for ApexCharts integration.
           </div>
         </div>
 
@@ -417,12 +429,15 @@ export class DateRangeSelectorEditor extends LitElement {
           <label for="offset_entity">Offset Helper Entity</label>
           <ha-selector
             .hass=${this.hass}
-            .selector=${{ entity: { domain: ['input_number'] } }}
-            .value=${this.config.offset_entity || ''}
-            @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'offset_entity')}
+            .selector=${{ entity: { domain: ["input_number"] } }}
+            .value=${this.config.offset_entity || ""}
+            @value-changed=${(e: CustomEvent) =>
+              this._entityChanged(e, "offset_entity")}
           ></ha-selector>
           <div class="helper-text">
-            Entity for storing offset in days from today to start date (must be an input_number helper). 0 = today, -7 = 7 days ago. Useful for ApexCharts integration.
+            Entity for storing offset in days from today to start date (must be
+            an input_number helper). 0 = today, -7 = 7 days ago. Useful for
+            ApexCharts integration.
           </div>
         </div>
 
@@ -434,13 +449,14 @@ export class DateRangeSelectorEditor extends LitElement {
         <div class="config-row checkbox-config">
           <label for="use_button_group">Use Connected Button Group</label>
           <div class="helper-text">
-            Display buttons as a modern, connected button group with no gaps between buttons
+            Display buttons as a modern, connected button group with no gaps
+            between buttons
           </div>
           <label class="checkbox-label">
             <input
               type="checkbox"
               id="use_button_group"
-              .configValue=${'use_button_group'}
+              .configValue=${"use_button_group"}
               .checked=${this.config.use_button_group === true}
               @change=${this._valueChanged}
             />
@@ -456,13 +472,14 @@ export class DateRangeSelectorEditor extends LitElement {
         <div class="config-row checkbox-config">
           <label for="floating_mode">Enable Floating Button Mode</label>
           <div class="helper-text">
-            Show a floating action button that opens a popup with the date selector controls
+            Show a floating action button that opens a popup with the date
+            selector controls
           </div>
           <label class="checkbox-label">
             <input
               type="checkbox"
               id="floating_mode"
-              .configValue=${'floating_mode'}
+              .configValue=${"floating_mode"}
               .checked=${this.config.floating_mode === true}
               @change=${this._valueChanged}
             />
@@ -474,11 +491,14 @@ export class DateRangeSelectorEditor extends LitElement {
           ? html`
               <!-- Floating Button Position -->
               <div class="config-row">
-                <label for="floating_button_position">Floating Button Position</label>
+                <label for="floating_button_position"
+                  >Floating Button Position</label
+                >
                 <select
                   id="floating_button_position"
-                  .configValue=${'floating_button_position'}
-                  .value=${this.config.floating_button_position || 'bottom-right'}
+                  .configValue=${"floating_button_position"}
+                  .value=${this.config.floating_button_position ||
+                  "bottom-right"}
                   @change=${this._valueChanged}
                 >
                   <option value="top-left">Top Left</option>
@@ -497,8 +517,10 @@ export class DateRangeSelectorEditor extends LitElement {
                 <ha-selector
                   .hass=${this.hass}
                   .selector=${{ icon: {} }}
-                  .value=${this.config.floating_button_icon || 'mdi:calendar-range'}
-                  @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'floating_button_icon')}
+                  .value=${this.config.floating_button_icon ||
+                  "mdi:calendar-range"}
+                  @value-changed=${(e: CustomEvent) =>
+                    this._entityChanged(e, "floating_button_icon")}
                 ></ha-selector>
                 <div class="helper-text">
                   Icon to display on the floating button
@@ -511,13 +533,14 @@ export class DateRangeSelectorEditor extends LitElement {
                 <input
                   type="text"
                   id="floating_button_text"
-                  .configValue=${'floating_button_text'}
-                  .value=${this.config.floating_button_text || ''}
+                  .configValue=${"floating_button_text"}
+                  .value=${this.config.floating_button_text || ""}
                   @input=${this._valueChanged}
                   placeholder="Leave empty to show icon"
                 />
                 <div class="helper-text">
-                  Optional text to display on the floating button (shown next to the icon)
+                  Optional text to display on the floating button (shown next to
+                  the icon)
                 </div>
               </div>
 
@@ -527,8 +550,8 @@ export class DateRangeSelectorEditor extends LitElement {
                 <input
                   type="text"
                   id="popup_title"
-                  .configValue=${'popup_title'}
-                  .value=${this.config.popup_title || 'Date Range Selector'}
+                  .configValue=${"popup_title"}
+                  .value=${this.config.popup_title || "Date Range Selector"}
                   @input=${this._valueChanged}
                   placeholder="Date Range Selector"
                 />
@@ -543,15 +566,16 @@ export class DateRangeSelectorEditor extends LitElement {
                 <ha-selector
                   .hass=${this.hass}
                   .selector=${{ icon: {} }}
-                  .value=${this.config.popup_icon || ''}
-                  @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'popup_icon')}
+                  .value=${this.config.popup_icon || ""}
+                  @value-changed=${(e: CustomEvent) =>
+                    this._entityChanged(e, "popup_icon")}
                 ></ha-selector>
                 <div class="helper-text">
                   Icon to display in the popup header next to the title
                 </div>
               </div>
             `
-          : ''}
+          : ""}
       </div>
     `;
   }
@@ -588,8 +612,8 @@ export class DateRangeSelectorEditor extends LitElement {
         color: var(--primary-text-color);
       }
 
-      input[type='text'],
-      input[type='date'],
+      input[type="text"],
+      input[type="date"],
       select,
       ha-selector {
         width: 100%;
@@ -608,8 +632,8 @@ export class DateRangeSelectorEditor extends LitElement {
         border: none;
       }
 
-      input[type='text']:focus,
-      input[type='date']:focus,
+      input[type="text"]:focus,
+      input[type="date"]:focus,
       select:focus {
         outline: none;
         border-color: var(--primary-color);
@@ -650,7 +674,7 @@ export class DateRangeSelectorEditor extends LitElement {
         font-size: 14px;
       }
 
-      .checkbox-label input[type='checkbox'] {
+      .checkbox-label input[type="checkbox"] {
         width: auto;
         height: auto;
         margin: 0;
