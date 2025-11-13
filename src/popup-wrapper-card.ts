@@ -541,10 +541,14 @@ export class PopupWrapperCard extends LitElement {
 }
 
 // Register the card
-(window as any).customCards = (window as any).customCards || [];
+if (!(window as any).customCards) {
+  (window as any).customCards = [];
+}
 (window as any).customCards.push({
   type: "custom:popup-wrapper-card",
   name: "Popup Wrapper",
   description:
     "Wraps any card in a popup that can be opened via floating button, entity, or auto-open",
+  preview: false,
+  documentationURL: "https://github.com/Prestodus/Date-Range-Selector",
 });

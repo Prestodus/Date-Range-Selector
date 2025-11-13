@@ -28,7 +28,21 @@ import {
 // Import the editor
 import "./editor";
 
-const VERSION = "v0.0.11";
+// Load HA components for ha-date-input
+const loadHaComponents = async () => {
+  if (customElements.get("ha-date-input")) return;
+  const helpers = await (window as any).loadCardHelpers?.();
+  if (!helpers) return;
+  try {
+    const card = await helpers.createCardElement({ type: "entity" });
+    if (!card) return;
+    await card.getConfigElement();
+  } catch {
+    // Silently fail if component loading fails
+  }
+};
+
+const VERSION = "v0.0.13";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c v${VERSION} `,
@@ -123,6 +137,11 @@ export class DateRangeSelectorCard extends LitElement {
 
   public getCardSize(): number {
     return 3;
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    loadHaComponents();
   }
 
   protected updated(changedProperties: PropertyValues): void {
@@ -1218,9 +1237,13 @@ export class DateRangeSelectorCard extends LitElement {
 }
 
 // Register the card
-(window as any).customCards = (window as any).customCards || [];
+if (!(window as any).customCards) {
+  (window as any).customCards = [];
+}
 (window as any).customCards.push({
   type: "custom:date-range-selector-card",
   name: "Date Range Selector",
   description: "A card for selecting date ranges with preset buttons",
+  preview: false,
+  documentationURL: "https://github.com/Prestodus/Date-Range-Selector",
 });

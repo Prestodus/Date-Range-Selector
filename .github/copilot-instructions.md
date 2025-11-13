@@ -4,18 +4,33 @@
 
 This is a custom Lovelace card for Home Assistant that provides an intuitive interface for selecting date ranges. The card is built as a web component and integrates with Home Assistant's frontend framework.
 
-**Key Features:**
+**Main Components:**
+- **Date Range Selector Card**: The primary card for date range selection
+- **Popup Wrapper Card**: A reusable wrapper that can display any Home Assistant card in a popup modal
+
+**Key Features (Date Range Selector):**
 - Preset date ranges (Day, Week, Month, Year)
 - Modern date pickers using Home Assistant's native components (ha-date-input)
 - Helper integration with automatic updates for range and offset entities
 - ApexCharts ready with built-in support for offset and range helpers
 - Navigation arrows for moving through time periods
 - Flexible range modes to show/hide specific range buttons
-- Display modes (Default and Compact layouts)
+- Display modes (Default, Compact, and In-Header layouts)
 - Smart entity selection with domain filtering and create-on-the-spot capability
 - Future date control and minimum date restrictions
 - ISO week support (Monday-Sunday)
+- Connected button group styling option
+- Floating mode with popup modal
 - Theme-aware styling using Home Assistant CSS variables
+
+**Key Features (Popup Wrapper):**
+- Wraps any Home Assistant card in a popup modal
+- Floating action button trigger with customizable position
+- Entity trigger mode (card that opens popup on click)
+- Auto-open on dashboard load option
+- Customizable button icons, text, and positioning
+- Responsive design with smooth animations
+- Click-outside-to-close functionality
 
 ## Technology Stack
 
@@ -32,48 +47,13 @@ This is a custom Lovelace card for Home Assistant that provides an intuitive int
 - Node.js v18.12 or higher
 - npm or yarn
 
-````instructions
-# GitHub Copilot Instructions for Date Range Selector Card
-
-## Project Overview
-
-This is a custom Lovelace card for Home Assistant that provides an intuitive interface for selecting date ranges. The card is built as a web component and integrates with Home Assistant's frontend framework.
-
-**Key Features:**
-- Preset date ranges (Day, Week, Month, Year)
-- Modern date pickers using Home Assistant's native components (ha-date-input)
-- Helper integration with automatic updates for range and offset entities
-- ApexCharts ready with built-in support for offset and range helpers
-- Navigation arrows for moving through time periods
-- Flexible range modes to show/hide specific range buttons
-- Display modes (Default and Compact layouts)
-- Smart entity selection with domain filtering and create-on-the-spot capability
-- Future date control and minimum date restrictions
-- ISO week support (Monday-Sunday)
-- Theme-aware styling using Home Assistant CSS variables
-
-## Technology Stack
-
-- **Language**: TypeScript (target: ES2020)
-- **UI Framework**: [Lit](https://lit.dev/) - Web components library with reactive properties and decorators
-- **Date Handling**: [date-fns](https://date-fns.org/) - Modern date utility library
-- **Build Tool**: [Rollup](https://rollupjs.org/) - Module bundler with TypeScript support
-- **Linting**: ESLint with TypeScript parser
-- **Formatting**: Prettier
-
-## Development Setup
-
-### Prerequisites
- - Node.js v18.12 or higher
- - npm or yarn
-
 ### Installation
 ```bash
 npm install
 ```
 
 ### Build Commands
-- `npm run build` - Build the production bundle
+- `npm run build` - Build the production bundles
 - `npm run watch` - Build in watch mode for development
 - `npm run lint` - Run ESLint on TypeScript files
 - `npm run format` - Format TypeScript files with Prettier
@@ -83,10 +63,13 @@ npm install
 src/
 ├── date-range-selector-card.ts  # Main card component
 ├── editor.ts                    # Visual editor for card configuration
+├── popup-wrapper-card.ts        # Popup wrapper card component
+├── popup-wrapper-editor.ts      # Popup wrapper card editor
 └── types.ts                     # TypeScript type definitions
 
 dist/
-└── date-range-selector-card.js  # Built output (bundled)
+├── date-range-selector-card.js  # Built output (bundled)
+└── popup-wrapper-card.js        # Built popup wrapper output (bundled)
 ```
 
 ## Code Style Guidelines
@@ -133,11 +116,20 @@ The card supports these configuration options:
 - `today_button_type` (optional, default: 'icon'): 'icon' or 'text' - When 'text', button label changes based on selected mode
 - `show_custom_range` (optional, default: false): Show custom button with modern date pickers
 - `hide_background` (optional, default: false): Remove the card background, shadow, and border
+- `hide_date_display` (optional, default: false): Hide the date range display text
+- `date_display_position` (optional, default: 'above'): Position of date display ('above' or 'below')
 - `disable_future` (optional, default: false): Prevent future date selection
 - `min_date` (optional): Minimum selectable date (YYYY-MM-DD format)
-- `display_mode` (optional, default: 'default'): 'default' or 'compact'
+- `display_mode` (optional, default: 'default'): 'default', 'compact', or 'in-header'
 - `visible_range_modes` (optional, all true by default): Control which range buttons to show (day/week/month/year)
 - `default_range_mode` (optional): Default range mode selection ('day', 'week', 'month', 'year')
+- `use_button_group` (optional, default: false): Use connected button group styling
+- `floating_mode` (optional, default: false): Enable floating button with popup
+- `floating_button_position` (optional, default: 'bottom-right'): Position of floating button ('top-left', 'top-right', 'bottom-left', 'bottom-right')
+- `floating_button_icon` (optional, default: 'mdi:calendar-range'): Custom icon for floating button
+- `floating_button_text` (optional, default: ''): Custom text for floating button
+- `popup_title` (optional, default: 'Date Range Selector'): Custom title for floating popup
+- `popup_icon` (optional, default: ''): Custom icon for floating popup header
 
 ### Dynamic "Today" Button
 The button that returns to the current period now adapts based on the selected mode:
@@ -197,9 +189,10 @@ This allows charts to automatically update their time range when the date select
 The editor is organized into logical sections with headers:
 1. **Required Entities**: Start and End date entities
 2. **Range Mode Configuration**: Which modes are visible and default mode
-3. **Display Options**: Visual appearance settings (display mode, button types, checkboxes for features)
+3. **Display Options**: Visual appearance settings (display mode, button types, button groups, checkboxes for features, date display position)
 4. **Date Constraints**: Future date and minimum date restrictions
 5. **Optional Helper Entities**: Range and offset entities for ApexCharts integration
+6. **Floating Mode Options**: Floating button configuration (when floating_mode is enabled)
 
 For boolean options, use the checkbox-config pattern:
 - Main label at the top
@@ -245,9 +238,9 @@ The card implements a locking mechanism to prevent issues when users rapidly int
 ## Build and Release Process
 
 ### Building
-- Run `npm run build` to create production bundle
-- Output: `dist/date-range-selector-card.js`
-- This file is distributed via HACS and GitHub releases
+- Run `npm run build` to create production bundles
+- Output: `dist/date-range-selector-card.js` and `dist/popup-wrapper-card.js`
+- These files are distributed via HACS and GitHub releases
 
 ### Code Quality
 - Always run `npm run lint` before committing
@@ -312,6 +305,38 @@ Security
 
 If you want, I can add a GitHub Actions workflow that builds on tags and uploads the `dist` bundle to Releases, plus a `.gitignore` and a Husky + lint-staged config to enforce checks locally.
 
+## Popup Wrapper Card
+
+The popup wrapper card is a reusable component that can wrap any Home Assistant card in a popup modal.
+
+### Configuration Interface
+```typescript
+export interface PopupWrapperCardConfig extends Record<string, any> {
+  type: string;
+  card: any; // The card configuration to wrap
+  trigger_type?: "floating" | "entity" | "auto";
+  trigger_entity?: string;
+  floating_button_position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  floating_button_icon?: string;
+  floating_button_text?: string;
+  popup_title?: string;
+  popup_icon?: string;
+  auto_open?: boolean;
+  close_on_click_outside?: boolean;
+}
+```
+
+### Usage Patterns
+- **Floating Mode**: Shows a floating action button that opens the popup
+- **Entity Mode**: Displays an entity card that opens the popup on click
+- **Auto Mode**: Automatically opens the popup on dashboard load
+
+### Implementation Details
+- Located in `src/popup-wrapper-card.ts` with editor in `src/popup-wrapper-editor.ts`
+- Uses the same Lit patterns as the main card
+- Dynamically creates wrapped card when needed to avoid issues in edit mode
+- Provides separate build output: `dist/popup-wrapper-card.js`
+
 ## Integration with Home Assistant
 
 ### Entity Types
@@ -370,6 +395,4 @@ If you want, I can add a GitHub Actions workflow that builds on tags and uploads
 - [Lit Documentation](https://lit.dev/)
 - [date-fns Documentation](https://date-fns.org/)
 - [Home Assistant Custom Card Development](https://developers.home-assistant.io/docs/frontend/custom-ui/custom-card/)
-- [HACS Documentation](https://hacs.xyz/) 
-
-````
+- [HACS Documentation](https://hacs.xyz/)

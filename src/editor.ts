@@ -52,7 +52,19 @@ export class DateRangeSelectorEditor extends LitElement {
 
     let newConfig: DateRangeSelectorCardConfig;
 
-    if (target.value === "" || target.value === undefined) {
+    // For text inputs, keep empty strings (don't delete them)
+    // Only delete if value is truly undefined
+    if (target.value === undefined) {
+      newConfig = { ...this.config };
+      delete newConfig[configValue];
+    } else if (target.value === "" && target.type === "text") {
+      // Keep empty strings for text inputs
+      newConfig = {
+        ...this.config,
+        [configValue]: "",
+      };
+    } else if (target.value === "") {
+      // For non-text inputs (select, etc), delete empty values
       newConfig = { ...this.config };
       delete newConfig[configValue];
     } else {
