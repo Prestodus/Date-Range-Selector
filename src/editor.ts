@@ -425,6 +425,103 @@ export class DateRangeSelectorEditor extends LitElement {
             Entity for storing offset in days from today to start date (must be an input_number helper). 0 = today, -7 = 7 days ago. Useful for ApexCharts integration.
           </div>
         </div>
+
+        <hr />
+
+        <h3>Button Style</h3>
+
+        <!-- Use Button Group -->
+        <div class="config-row checkbox-config">
+          <label for="use_button_group">Use Connected Button Group</label>
+          <div class="helper-text">
+            Display buttons as a modern, connected button group with no gaps between buttons
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="use_button_group"
+              .configValue=${'use_button_group'}
+              .checked=${this.config.use_button_group === true}
+              @change=${this._valueChanged}
+            />
+            <span>Enable connected button group style</span>
+          </label>
+        </div>
+
+        <hr />
+
+        <h3>Floating Mode</h3>
+
+        <!-- Floating Mode -->
+        <div class="config-row checkbox-config">
+          <label for="floating_mode">Enable Floating Button Mode</label>
+          <div class="helper-text">
+            Show a floating action button that opens a popup with the date selector controls
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="floating_mode"
+              .configValue=${'floating_mode'}
+              .checked=${this.config.floating_mode === true}
+              @change=${this._valueChanged}
+            />
+            <span>Enable floating button mode</span>
+          </label>
+        </div>
+
+        ${this.config.floating_mode === true
+          ? html`
+              <!-- Floating Button Position -->
+              <div class="config-row">
+                <label for="floating_button_position">Floating Button Position</label>
+                <select
+                  id="floating_button_position"
+                  .configValue=${'floating_button_position'}
+                  .value=${this.config.floating_button_position || 'bottom-right'}
+                  @change=${this._valueChanged}
+                >
+                  <option value="top-left">Top Left</option>
+                  <option value="top-right">Top Right</option>
+                  <option value="bottom-left">Bottom Left</option>
+                  <option value="bottom-right">Bottom Right</option>
+                </select>
+                <div class="helper-text">
+                  Position of the floating action button on the screen
+                </div>
+              </div>
+
+              <!-- Floating Button Icon -->
+              <div class="config-row">
+                <label for="floating_button_icon">Floating Button Icon</label>
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ icon: {} }}
+                  .value=${this.config.floating_button_icon || 'mdi:calendar-range'}
+                  @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'floating_button_icon')}
+                ></ha-selector>
+                <div class="helper-text">
+                  Icon to display on the floating button (only shown if text is empty)
+                </div>
+              </div>
+
+              <!-- Floating Button Text -->
+              <div class="config-row">
+                <label for="floating_button_text">Floating Button Text</label>
+                <input
+                  type="text"
+                  id="floating_button_text"
+                  .configValue=${'floating_button_text'}
+                  .value=${this.config.floating_button_text || ''}
+                  @input=${this._valueChanged}
+                  placeholder="Leave empty to show icon"
+                />
+                <div class="helper-text">
+                  Optional text to display on the floating button (overrides icon if set)
+                </div>
+              </div>
+            `
+          : ''}
       </div>
     `;
   }
