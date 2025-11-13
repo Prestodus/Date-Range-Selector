@@ -501,7 +501,7 @@ export class DateRangeSelectorEditor extends LitElement {
                   @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'floating_button_icon')}
                 ></ha-selector>
                 <div class="helper-text">
-                  Icon to display on the floating button (only shown if text is empty)
+                  Icon to display on the floating button
                 </div>
               </div>
 
@@ -517,7 +517,37 @@ export class DateRangeSelectorEditor extends LitElement {
                   placeholder="Leave empty to show icon"
                 />
                 <div class="helper-text">
-                  Optional text to display on the floating button (overrides icon if set)
+                  Optional text to display on the floating button (shown next to the icon)
+                </div>
+              </div>
+
+              <!-- Popup Title -->
+              <div class="config-row">
+                <label for="popup_title">Popup Title</label>
+                <input
+                  type="text"
+                  id="popup_title"
+                  .configValue=${'popup_title'}
+                  .value=${this.config.popup_title || 'Date Range Selector'}
+                  @input=${this._valueChanged}
+                  placeholder="Date Range Selector"
+                />
+                <div class="helper-text">
+                  Title displayed in the popup header
+                </div>
+              </div>
+
+              <!-- Popup Icon -->
+              <div class="config-row">
+                <label for="popup_icon">Popup Icon (Optional)</label>
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ icon: {} }}
+                  .value=${this.config.popup_icon || ''}
+                  @value-changed=${(e: CustomEvent) => this._entityChanged(e, 'popup_icon')}
+                ></ha-selector>
+                <div class="helper-text">
+                  Icon to display in the popup header next to the title
                 </div>
               </div>
             `

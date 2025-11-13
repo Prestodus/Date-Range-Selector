@@ -85,6 +85,8 @@ export class DateRangeSelectorCard extends LitElement {
       floating_button_position: 'bottom-right',
       floating_button_icon: 'mdi:calendar-range',
       floating_button_text: '',
+      popup_title: 'Date Range Selector',
+      popup_icon: '',
       ...config,
     };
 
@@ -631,6 +633,7 @@ export class DateRangeSelectorCard extends LitElement {
         <div class="custom-range-pickers">
           <div class="picker-group">
             <ha-date-input
+              .hass=${this.hass}
               .locale=${this.hass.locale}
               .value=${format(this.currentStartDate, 'yyyy-MM-dd')}
               .label=${'Start Date'}
@@ -642,6 +645,7 @@ export class DateRangeSelectorCard extends LitElement {
           </div>
           <div class="picker-group">
             <ha-date-input
+              .hass=${this.hass}
               .locale=${this.hass.locale}
               .value=${format(this.currentEndDate, 'yyyy-MM-dd')}
               .label=${'End Date'}
@@ -692,7 +696,10 @@ export class DateRangeSelectorCard extends LitElement {
                 <div class="floating-popup-overlay" @click=${this._closeFloatingPopup}>
                   <div class="floating-popup" @click=${(e: Event) => e.stopPropagation()}>
                     <div class="popup-header">
-                      <h3>Date Range Selector</h3>
+                      <div class="popup-header-content">
+                        ${this.config.popup_icon ? html`<ha-icon icon="${this.config.popup_icon}"></ha-icon>` : ''}
+                        <h3>${this.config.popup_title || 'Date Range Selector'}</h3>
+                      </div>
                       <button class="close-button" @click=${this._closeFloatingPopup}>
                         <ha-icon icon="mdi:close"></ha-icon>
                       </button>
@@ -823,7 +830,6 @@ export class DateRangeSelectorCard extends LitElement {
         gap: 0;
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
       .button-row.button-group .preset-button,
@@ -1060,6 +1066,17 @@ export class DateRangeSelectorCard extends LitElement {
         justify-content: space-between;
         padding: 16px 20px;
         border-bottom: 1px solid var(--divider-color, #e0e0e0);
+      }
+
+      .popup-header-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .popup-header-content ha-icon {
+        --mdc-icon-size: 24px;
+        color: var(--primary-color);
       }
 
       .popup-header h3 {
