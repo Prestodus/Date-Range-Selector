@@ -1,5 +1,5 @@
-import { LitElement, html, css, PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { LitElement, html, css, PropertyValues } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 import {
   startOfDay,
   endOfDay,
@@ -18,25 +18,29 @@ import {
   isBefore,
   isAfter,
   differenceInDays,
-} from 'date-fns';
-import { DateRangeSelectorCardConfig, PresetType, HomeAssistant } from './types';
+} from "date-fns";
+import {
+  DateRangeSelectorCardConfig,
+  PresetType,
+  HomeAssistant,
+} from "./types";
 
 // Import the editor
-import './editor';
+import "./editor";
 
-const VERSION = '0.0.2';
+const VERSION = "v0.0.10";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c v${VERSION} `,
-  'color: white; background: #0084ff; font-weight: 700;',
-  'color: #0084ff; background: white; font-weight: 700;'
+  "color: white; background: #0084ff; font-weight: 700;",
+  "color: #0084ff; background: white; font-weight: 700;",
 );
 
-@customElement('date-range-selector-card')
+@customElement("date-range-selector-card")
 export class DateRangeSelectorCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private config!: DateRangeSelectorCardConfig;
-  @state() private selectedPreset: PresetType = 'day';
+  @state() private selectedPreset: PresetType = "day";
   @state() private currentStartDate: Date = startOfDay(new Date());
   @state() private currentEndDate: Date = endOfDay(new Date());
   @state() private showCustomPickers: boolean = false;
@@ -44,36 +48,36 @@ export class DateRangeSelectorCard extends LitElement {
   @state() private showFloatingPopup: boolean = false;
 
   public static getConfigElement() {
-    return document.createElement('date-range-selector-editor');
+    return document.createElement("date-range-selector-editor");
   }
 
   public static getStubConfig(): DateRangeSelectorCardConfig {
     return {
-      type: 'custom:date-range-selector-card',
-      start_entity: '',
-      end_entity: '',
+      type: "custom:date-range-selector-card",
+      start_entity: "",
+      end_entity: "",
       show_arrows: true,
-      today_button_type: 'icon',
+      today_button_type: "icon",
     };
   }
 
   public setConfig(config: DateRangeSelectorCardConfig): void {
     if (!config.start_entity) {
-      throw new Error('You must define start_entity');
+      throw new Error("You must define start_entity");
     }
     if (!config.end_entity) {
-      throw new Error('You must define end_entity');
+      throw new Error("You must define end_entity");
     }
 
     this.config = {
       show_arrows: true,
-      today_button_type: 'icon',
+      today_button_type: "icon",
       hide_background: false,
       hide_date_display: false,
-      date_display_position: 'above',
+      date_display_position: "above",
       show_custom_range: false,
       disable_future: false,
-      display_mode: 'default',
+      display_mode: "default",
       visible_range_modes: {
         day: true,
         week: true,
@@ -82,29 +86,36 @@ export class DateRangeSelectorCard extends LitElement {
       },
       use_button_group: false,
       floating_mode: false,
-      floating_button_position: 'bottom-right',
-      floating_button_icon: 'mdi:calendar-range',
-      floating_button_text: '',
-      popup_title: 'Date Range Selector',
-      popup_icon: '',
+      floating_button_position: "bottom-right",
+      floating_button_icon: "mdi:calendar-range",
+      floating_button_text: "",
+      popup_title: "Date Range Selector",
+      popup_icon: "",
       ...config,
     };
 
     // Ensure at least one range mode is visible
     const visibleModes = this.config.visible_range_modes!;
-    const hasVisibleMode = visibleModes.day || visibleModes.week || visibleModes.month || visibleModes.year;
+    const hasVisibleMode =
+      visibleModes.day ||
+      visibleModes.week ||
+      visibleModes.month ||
+      visibleModes.year;
     if (!hasVisibleMode) {
       // Default to day if all are hidden
       visibleModes.day = true;
     }
 
     // Determine default range mode (smallest visible if not specified or not visible)
-    if (!this.config.default_range_mode || !this._isRangeModeVisible(this.config.default_range_mode)) {
+    if (
+      !this.config.default_range_mode ||
+      !this._isRangeModeVisible(this.config.default_range_mode)
+    ) {
       // Find the smallest visible range mode
-      if (visibleModes.day) this.selectedPreset = 'day';
-      else if (visibleModes.week) this.selectedPreset = 'week';
-      else if (visibleModes.month) this.selectedPreset = 'month';
-      else if (visibleModes.year) this.selectedPreset = 'year';
+      if (visibleModes.day) this.selectedPreset = "day";
+      else if (visibleModes.week) this.selectedPreset = "week";
+      else if (visibleModes.month) this.selectedPreset = "month";
+      else if (visibleModes.year) this.selectedPreset = "year";
     } else {
       this.selectedPreset = this.config.default_range_mode;
     }
@@ -116,8 +127,8 @@ export class DateRangeSelectorCard extends LitElement {
 
   protected updated(changedProperties: PropertyValues): void {
     super.updated(changedProperties);
-    
-    if (changedProperties.has('hass') && this.hass) {
+
+    if (changedProperties.has("hass") && this.hass) {
       this._updateDatesFromEntities();
     }
   }
@@ -128,39 +139,50 @@ export class DateRangeSelectorCard extends LitElement {
     const startEntity = this.hass.states[this.config.start_entity];
     const endEntity = this.hass.states[this.config.end_entity];
 
-    if (startEntity && startEntity.state !== 'unavailable' && startEntity.state !== 'unknown') {
+    if (
+      startEntity &&
+      startEntity.state !== "unavailable" &&
+      startEntity.state !== "unknown"
+    ) {
       try {
         this.currentStartDate = parseISO(startEntity.state);
       } catch (e) {
-        console.error('Error parsing start date:', e);
+        console.error("Error parsing start date:", e);
       }
     }
 
-    if (endEntity && endEntity.state !== 'unavailable' && endEntity.state !== 'unknown') {
+    if (
+      endEntity &&
+      endEntity.state !== "unavailable" &&
+      endEntity.state !== "unknown"
+    ) {
       try {
         this.currentEndDate = parseISO(endEntity.state);
       } catch (e) {
-        console.error('Error parsing end date:', e);
+        console.error("Error parsing end date:", e);
       }
     }
   }
 
   private _handleToday(): void {
     const today = new Date();
-    
+
     // If in custom mode, reset to day mode
-    if (this.selectedPreset === 'custom') {
-      this.selectedPreset = 'day';
+    if (this.selectedPreset === "custom") {
+      this.selectedPreset = "day";
       this.showCustomPickers = false;
     }
-    
+
     // Calculate range based on current mode
-    const { start, end } = this._calculatePresetRange(this.selectedPreset, today);
+    const { start, end } = this._calculatePresetRange(
+      this.selectedPreset,
+      today,
+    );
     this._setDateRange(start, end);
   }
 
   private _handlePreset(preset: PresetType): void {
-    if (preset === 'custom') {
+    if (preset === "custom") {
       this.showCustomPickers = !this.showCustomPickers;
       this.selectedPreset = preset;
       return;
@@ -173,25 +195,25 @@ export class DateRangeSelectorCard extends LitElement {
     this._setDateRange(start, end);
   }
 
-  private _handleNavigation(direction: 'prev' | 'next'): void {
-    if (this.selectedPreset === 'custom') return;
+  private _handleNavigation(direction: "prev" | "next"): void {
+    if (this.selectedPreset === "custom") return;
 
-    const amount = direction === 'prev' ? -1 : 1;
+    const amount = direction === "prev" ? -1 : 1;
     let referenceDate: Date;
 
     // Get a reference date for calculating the new range
     // Use start date for calculating the new period
     switch (this.selectedPreset) {
-      case 'day':
+      case "day":
         referenceDate = addDays(this.currentStartDate, amount);
         break;
-      case 'week':
+      case "week":
         referenceDate = addWeeks(this.currentStartDate, amount);
         break;
-      case 'month':
+      case "month":
         referenceDate = addMonths(this.currentStartDate, amount);
         break;
-      case 'year':
+      case "year":
         referenceDate = addYears(this.currentStartDate, amount);
         break;
       default:
@@ -199,28 +221,34 @@ export class DateRangeSelectorCard extends LitElement {
     }
 
     // Calculate the full range for the new period
-    const { start, end } = this._calculatePresetRange(this.selectedPreset, referenceDate);
+    const { start, end } = this._calculatePresetRange(
+      this.selectedPreset,
+      referenceDate,
+    );
     this._setDateRange(start, end);
   }
 
-  private _calculatePresetRange(preset: PresetType, referenceDate: Date): { start: Date; end: Date } {
+  private _calculatePresetRange(
+    preset: PresetType,
+    referenceDate: Date,
+  ): { start: Date; end: Date } {
     let start: Date;
     let end: Date;
 
     switch (preset) {
-      case 'day':
+      case "day":
         start = startOfDay(referenceDate);
         end = endOfDay(referenceDate);
         break;
-      case 'week':
+      case "week":
         start = startOfWeek(referenceDate, { weekStartsOn: 1 }); // ISO week (Monday)
         end = endOfWeek(referenceDate, { weekStartsOn: 1 });
         break;
-      case 'month':
+      case "month":
         start = startOfMonth(referenceDate);
         end = endOfMonth(referenceDate);
         break;
-      case 'year':
+      case "year":
         start = startOfYear(referenceDate);
         end = endOfYear(referenceDate);
         break;
@@ -232,7 +260,10 @@ export class DateRangeSelectorCard extends LitElement {
     return this._applyConstraints(start, end);
   }
 
-  private _applyConstraints(start: Date, end: Date): { start: Date; end: Date } {
+  private _applyConstraints(
+    start: Date,
+    end: Date,
+  ): { start: Date; end: Date } {
     const today = endOfDay(new Date());
     let constrainedStart = start;
     let constrainedEnd = end;
@@ -264,23 +295,23 @@ export class DateRangeSelectorCard extends LitElement {
   }
 
   private _canNavigatePrev(): boolean {
-    if (this.selectedPreset === 'custom') return false;
+    if (this.selectedPreset === "custom") return false;
     if (!this.config.min_date) return true;
 
     const minDateValue = parseISO(this.config.min_date);
     let testDate: Date;
 
     switch (this.selectedPreset) {
-      case 'day':
+      case "day":
         testDate = addDays(this.currentStartDate, -1);
         break;
-      case 'week':
+      case "week":
         testDate = addWeeks(this.currentStartDate, -1);
         break;
-      case 'month':
+      case "month":
         testDate = addMonths(this.currentStartDate, -1);
         break;
-      case 'year':
+      case "year":
         testDate = addYears(this.currentStartDate, -1);
         break;
       default:
@@ -291,23 +322,23 @@ export class DateRangeSelectorCard extends LitElement {
   }
 
   private _canNavigateNext(): boolean {
-    if (this.selectedPreset === 'custom') return false;
+    if (this.selectedPreset === "custom") return false;
     if (!this.config.disable_future) return true;
 
     const today = new Date();
     let testDate: Date;
 
     switch (this.selectedPreset) {
-      case 'day':
+      case "day":
         testDate = addDays(this.currentEndDate, 1);
         break;
-      case 'week':
+      case "week":
         testDate = addWeeks(this.currentEndDate, 1);
         break;
-      case 'month':
+      case "month":
         testDate = addMonths(this.currentEndDate, 1);
         break;
-      case 'year':
+      case "year":
         testDate = addYears(this.currentEndDate, 1);
         break;
       default:
@@ -318,28 +349,28 @@ export class DateRangeSelectorCard extends LitElement {
   }
 
   private _isRangeModeVisible(mode: PresetType): boolean {
-    if (mode === 'custom') return this.config.show_custom_range === true;
+    if (mode === "custom") return this.config.show_custom_range === true;
     return this.config.visible_range_modes?.[mode] !== false;
   }
 
   private _getVisibleRangeModes(): PresetType[] {
     const modes: PresetType[] = [];
-    if (this._isRangeModeVisible('day')) modes.push('day');
-    if (this._isRangeModeVisible('week')) modes.push('week');
-    if (this._isRangeModeVisible('month')) modes.push('month');
-    if (this._isRangeModeVisible('year')) modes.push('year');
+    if (this._isRangeModeVisible("day")) modes.push("day");
+    if (this._isRangeModeVisible("week")) modes.push("week");
+    if (this._isRangeModeVisible("month")) modes.push("month");
+    if (this._isRangeModeVisible("year")) modes.push("year");
     return modes;
   }
 
   private _shouldShowRangeButton(mode: PresetType): boolean {
     if (!this._isRangeModeVisible(mode)) return false;
-    
+
     // If custom range is disabled and only one range mode is active, hide its button
     if (!this.config.show_custom_range) {
       const visibleModes = this._getVisibleRangeModes();
       if (visibleModes.length === 1) return false;
     }
-    
+
     return true;
   }
 
@@ -353,16 +384,16 @@ export class DateRangeSelectorCard extends LitElement {
     this.currentStartDate = start;
     this.currentEndDate = end;
 
-    const startDateStr = format(start, 'yyyy-MM-dd');
-    const endDateStr = format(end, 'yyyy-MM-dd');
+    const startDateStr = format(start, "yyyy-MM-dd");
+    const endDateStr = format(end, "yyyy-MM-dd");
 
     try {
-      await this.hass.callService('input_datetime', 'set_datetime', {
+      await this.hass.callService("input_datetime", "set_datetime", {
         entity_id: this.config.start_entity,
         date: startDateStr,
       });
 
-      await this.hass.callService('input_datetime', 'set_datetime', {
+      await this.hass.callService("input_datetime", "set_datetime", {
         entity_id: this.config.end_entity,
         date: endDateStr,
       });
@@ -370,7 +401,7 @@ export class DateRangeSelectorCard extends LitElement {
       // Update range entity (number of days)
       if (this.config.range_entity) {
         const range = differenceInDays(end, start) + 1; // +1 to include both start and end day
-        await this.hass.callService('input_number', 'set_value', {
+        await this.hass.callService("input_number", "set_value", {
           entity_id: this.config.range_entity,
           value: range,
         });
@@ -380,13 +411,13 @@ export class DateRangeSelectorCard extends LitElement {
       if (this.config.offset_entity) {
         const today = startOfDay(new Date());
         const offset = differenceInDays(start, today);
-        await this.hass.callService('input_number', 'set_value', {
+        await this.hass.callService("input_number", "set_value", {
           entity_id: this.config.offset_entity,
           value: offset,
         });
       }
     } catch (error) {
-      console.error('Error setting date range:', error);
+      console.error("Error setting date range:", error);
     } finally {
       // Add a small delay to ensure Home Assistant has processed the updates
       setTimeout(() => {
@@ -400,12 +431,12 @@ export class DateRangeSelectorCard extends LitElement {
     if (value) {
       const newStart = parseISO(value);
       let newEnd = this.currentEndDate;
-      
+
       // If new start date is after current end date, update end date to match start
       if (isAfter(newStart, this.currentEndDate)) {
         newEnd = newStart;
       }
-      
+
       this._setDateRange(newStart, newEnd);
     }
   }
@@ -420,18 +451,18 @@ export class DateRangeSelectorCard extends LitElement {
 
   private _getTodayButtonLabel(): string {
     switch (this.selectedPreset) {
-      case 'day':
-        return 'Today';
-      case 'week':
-        return 'This Week';
-      case 'month':
-        return 'This Month';
-      case 'year':
-        return 'This Year';
-      case 'custom':
-        return 'Today';
+      case "day":
+        return "Today";
+      case "week":
+        return "This Week";
+      case "month":
+        return "This Month";
+      case "year":
+        return "This Year";
+      case "custom":
+        return "Today";
       default:
-        return 'Today';
+        return "Today";
     }
   }
 
@@ -445,31 +476,34 @@ export class DateRangeSelectorCard extends LitElement {
 
   private _isTodayRangeActive(): boolean {
     // Check if the current date range matches what would happen if the today button was pressed
-    if (this.selectedPreset === 'custom') return false;
-    
+    if (this.selectedPreset === "custom") return false;
+
     const today = new Date();
-    const { start, end } = this._calculatePresetRange(this.selectedPreset, today);
-    
+    const { start, end } = this._calculatePresetRange(
+      this.selectedPreset,
+      today,
+    );
+
     // Compare dates by string format to avoid time comparison issues
-    const currentStart = format(this.currentStartDate, 'yyyy-MM-dd');
-    const currentEnd = format(this.currentEndDate, 'yyyy-MM-dd');
-    const todayStart = format(start, 'yyyy-MM-dd');
-    const todayEnd = format(end, 'yyyy-MM-dd');
-    
+    const currentStart = format(this.currentStartDate, "yyyy-MM-dd");
+    const currentEnd = format(this.currentEndDate, "yyyy-MM-dd");
+    const todayStart = format(start, "yyyy-MM-dd");
+    const todayEnd = format(end, "yyyy-MM-dd");
+
     return currentStart === todayStart && currentEnd === todayEnd;
   }
 
   private _isEditMode(): boolean {
     // Check if we're in edit mode by looking at the URL or panel state
     // In edit mode, the URL typically contains 'edit=1' or the panel class has 'edit-mode'
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const url = window.location.href;
-      if (url.includes('edit=1')) return true;
-      
+      if (url.includes("edit=1")) return true;
+
       // Check if any parent has edit-mode class
       let element = this.parentElement;
       while (element) {
-        if (element.classList?.contains('edit-mode')) return true;
+        if (element.classList?.contains("edit-mode")) return true;
         element = element.parentElement;
       }
     }
@@ -478,8 +512,8 @@ export class DateRangeSelectorCard extends LitElement {
 
   private _formatDateRange(): string {
     try {
-      const startFormatted = format(this.currentStartDate, 'MMMM d, yyyy');
-      const endFormatted = format(this.currentEndDate, 'MMMM d, yyyy');
+      const startFormatted = format(this.currentStartDate, "MMMM d, yyyy");
+      const endFormatted = format(this.currentEndDate, "MMMM d, yyyy");
 
       if (startFormatted === endFormatted) {
         return startFormatted;
@@ -487,7 +521,7 @@ export class DateRangeSelectorCard extends LitElement {
 
       return `${startFormatted} - ${endFormatted}`;
     } catch (e) {
-      return 'Invalid date range';
+      return "Invalid date range";
     }
   }
 
@@ -496,18 +530,19 @@ export class DateRangeSelectorCard extends LitElement {
       return html``;
     }
 
-    const cardClass = this.config.hide_background ? 'no-background' : '';
-    const compactMode = this.config.display_mode === 'compact';
-    const inHeaderMode = this.config.display_mode === 'in-header';
+    const cardClass = this.config.hide_background ? "no-background" : "";
+    const compactMode = this.config.display_mode === "compact";
+    const inHeaderMode = this.config.display_mode === "in-header";
     const showDateDisplay = !this.config.hide_date_display;
-    const datePosition = this.config.date_display_position || 'above';
+    const datePosition = this.config.date_display_position || "above";
     const useButtonGroup = this.config.use_button_group === true;
-    const floatingMode = this.config.floating_mode === true && !this._isEditMode();
+    const floatingMode =
+      this.config.floating_mode === true && !this._isEditMode();
 
     // Render date display template
     const renderDateDisplay = () => {
       if (!showDateDisplay) return html``;
-      
+
       if (compactMode) {
         return html`
           <div class="date-range-display compact">
@@ -515,131 +550,136 @@ export class DateRangeSelectorCard extends LitElement {
           </div>
         `;
       }
-      
+
       return html`
-        <div class="date-range-display">
-          ${this._formatDateRange()}
-        </div>
+        <div class="date-range-display">${this._formatDateRange()}</div>
       `;
     };
 
     // Render the button row content
     const renderButtonRow = () => html`
-      <div class="button-row ${useButtonGroup ? 'button-group' : ''}">
+      <div class="button-row ${useButtonGroup ? "button-group" : ""}">
         ${this.config.show_arrows
           ? html`
               <button
                 class="nav-button"
-                @click=${() => this._handleNavigation('prev')}
+                @click=${() => this._handleNavigation("prev")}
                 ?disabled=${!this._canNavigatePrev() || this.isUpdating}
                 title="Previous"
               >
                 <ha-icon icon="mdi:chevron-left"></ha-icon>
               </button>
             `
-          : ''}
+          : ""}
 
         <button
-          class="preset-button ${this._isTodayRangeActive() ? 'active' : ''}"
+          class="preset-button ${this._isTodayRangeActive() ? "active" : ""}"
           @click=${this._handleToday}
           ?disabled=${this.isUpdating}
           title="${this._getTodayButtonLabel()}"
         >
-          ${this.config.today_button_type === 'icon'
+          ${this.config.today_button_type === "icon"
             ? html`<ha-icon icon="mdi:calendar-today"></ha-icon>`
             : html`${this._getTodayButtonLabel()}`}
         </button>
 
-        ${this._shouldShowRangeButton('day')
+        ${this._shouldShowRangeButton("day")
           ? html`
               <button
-                class="preset-button ${this.selectedPreset === 'day' ? 'active' : ''}"
-                @click=${() => this._handlePreset('day')}
+                class="preset-button ${this.selectedPreset === "day"
+                  ? "active"
+                  : ""}"
+                @click=${() => this._handlePreset("day")}
                 ?disabled=${this.isUpdating}
               >
                 Day
               </button>
             `
-          : ''}
-
-        ${this._shouldShowRangeButton('week')
+          : ""}
+        ${this._shouldShowRangeButton("week")
           ? html`
               <button
-                class="preset-button ${this.selectedPreset === 'week' ? 'active' : ''}"
-                @click=${() => this._handlePreset('week')}
+                class="preset-button ${this.selectedPreset === "week"
+                  ? "active"
+                  : ""}"
+                @click=${() => this._handlePreset("week")}
                 ?disabled=${this.isUpdating}
               >
                 Week
               </button>
             `
-          : ''}
-
-        ${this._shouldShowRangeButton('month')
+          : ""}
+        ${this._shouldShowRangeButton("month")
           ? html`
               <button
-                class="preset-button ${this.selectedPreset === 'month' ? 'active' : ''}"
-                @click=${() => this._handlePreset('month')}
+                class="preset-button ${this.selectedPreset === "month"
+                  ? "active"
+                  : ""}"
+                @click=${() => this._handlePreset("month")}
                 ?disabled=${this.isUpdating}
               >
                 Month
               </button>
             `
-          : ''}
-
-        ${this._shouldShowRangeButton('year')
+          : ""}
+        ${this._shouldShowRangeButton("year")
           ? html`
               <button
-                class="preset-button ${this.selectedPreset === 'year' ? 'active' : ''}"
-                @click=${() => this._handlePreset('year')}
+                class="preset-button ${this.selectedPreset === "year"
+                  ? "active"
+                  : ""}"
+                @click=${() => this._handlePreset("year")}
                 ?disabled=${this.isUpdating}
               >
                 Year
               </button>
             `
-          : ''}
-
+          : ""}
         ${this.config.show_custom_range
           ? html`
               <button
-                class="preset-button ${this.selectedPreset === 'custom' ? 'active' : ''}"
-                @click=${() => this._handlePreset('custom')}
+                class="preset-button ${this.selectedPreset === "custom"
+                  ? "active"
+                  : ""}"
+                @click=${() => this._handlePreset("custom")}
                 ?disabled=${this.isUpdating}
               >
                 Custom
               </button>
             `
-          : ''}
-
+          : ""}
         ${this.config.show_arrows
           ? html`
               <button
                 class="nav-button"
-                @click=${() => this._handleNavigation('next')}
+                @click=${() => this._handleNavigation("next")}
                 ?disabled=${!this._canNavigateNext() || this.isUpdating}
                 title="Next"
               >
                 <ha-icon icon="mdi:chevron-right"></ha-icon>
               </button>
             `
-          : ''}
+          : ""}
       </div>
     `;
 
     // Render custom date pickers
     const renderCustomPickers = () => {
       if (!this.showCustomPickers) return html``;
-      
+
       return html`
         <div class="custom-range-pickers">
           <div class="picker-group">
             <ha-date-input
               .hass=${this.hass}
               .locale=${this.hass.locale}
-              .value=${format(this.currentStartDate, 'yyyy-MM-dd')}
-              .label=${'Start Date'}
+              .value=${format(this.currentStartDate, "yyyy-MM-dd")}
+              .label=${"Start Date"}
               @value-changed=${this._handleCustomStartChange}
-              .min=${this.config.min_date || ''}
-              .max=${this.config.disable_future ? format(new Date(), 'yyyy-MM-dd') : ''}
+              .min=${this.config.min_date || ""}
+              .max=${this.config.disable_future
+                ? format(new Date(), "yyyy-MM-dd")
+                : ""}
               .disabled=${this.isUpdating}
             ></ha-date-input>
           </div>
@@ -647,11 +687,13 @@ export class DateRangeSelectorCard extends LitElement {
             <ha-date-input
               .hass=${this.hass}
               .locale=${this.hass.locale}
-              .value=${format(this.currentEndDate, 'yyyy-MM-dd')}
-              .label=${'End Date'}
+              .value=${format(this.currentEndDate, "yyyy-MM-dd")}
+              .label=${"End Date"}
               @value-changed=${this._handleCustomEndChange}
-              .min=${format(this.currentStartDate, 'yyyy-MM-dd')}
-              .max=${this.config.disable_future ? format(new Date(), 'yyyy-MM-dd') : ''}
+              .min=${format(this.currentStartDate, "yyyy-MM-dd")}
+              .max=${this.config.disable_future
+                ? format(new Date(), "yyyy-MM-dd")
+                : ""}
               .disabled=${this.isUpdating}
             ></ha-date-input>
           </div>
@@ -662,13 +704,13 @@ export class DateRangeSelectorCard extends LitElement {
     // Render main content
     const renderMainContent = () => html`
       <!-- Date Range Display (Above) -->
-      ${datePosition === 'above' ? renderDateDisplay() : ''}
+      ${datePosition === "above" ? renderDateDisplay() : ""}
 
       <!-- Preset Buttons Row -->
       ${renderButtonRow()}
 
       <!-- Date Range Display (Below) -->
-      ${datePosition === 'below' ? renderDateDisplay() : ''}
+      ${datePosition === "below" ? renderDateDisplay() : ""}
 
       <!-- Custom Date Pickers -->
       ${renderCustomPickers()}
@@ -676,51 +718,66 @@ export class DateRangeSelectorCard extends LitElement {
 
     // If floating mode, render the floating button and popup
     if (floatingMode) {
-      const position = this.config.floating_button_position || 'bottom-right';
-      const icon = this.config.floating_button_icon || 'mdi:calendar-range';
-      const text = this.config.floating_button_text || '';
+      const position = this.config.floating_button_position || "bottom-right";
+      const icon = this.config.floating_button_icon || "mdi:calendar-range";
+      const text = this.config.floating_button_text || "";
 
       return html`
         <div class="floating-container">
           <button
-            class="floating-button ${position} ${text ? 'with-text' : ''}"
+            class="floating-button ${position} ${text ? "with-text" : ""}"
             @click=${this._toggleFloatingPopup}
             title="Date Range Selector"
           >
             <ha-icon icon="${icon}"></ha-icon>
-            ${text ? html`<span class="button-text">${text}</span>` : ''}
+            ${text ? html`<span class="button-text">${text}</span>` : ""}
           </button>
 
           ${this.showFloatingPopup
             ? html`
-                <div class="floating-popup-overlay" @click=${this._closeFloatingPopup}>
-                  <div class="floating-popup" @click=${(e: Event) => e.stopPropagation()}>
+                <div
+                  class="floating-popup-overlay"
+                  @click=${this._closeFloatingPopup}
+                >
+                  <div
+                    class="floating-popup"
+                    @click=${(e: Event) => e.stopPropagation()}
+                  >
                     <div class="popup-header">
                       <div class="popup-header-content">
-                        ${this.config.popup_icon ? html`<ha-icon icon="${this.config.popup_icon}"></ha-icon>` : ''}
-                        <h3>${this.config.popup_title || 'Date Range Selector'}</h3>
+                        ${this.config.popup_icon
+                          ? html`<ha-icon
+                              icon="${this.config.popup_icon}"
+                            ></ha-icon>`
+                          : ""}
+                        <h3>
+                          ${this.config.popup_title || "Date Range Selector"}
+                        </h3>
                       </div>
-                      <button class="close-button" @click=${this._closeFloatingPopup}>
+                      <button
+                        class="close-button"
+                        @click=${this._closeFloatingPopup}
+                      >
                         <ha-icon icon="mdi:close"></ha-icon>
                       </button>
                     </div>
-                    <div class="popup-content">
-                      ${renderMainContent()}
-                    </div>
+                    <div class="popup-content">${renderMainContent()}</div>
                   </div>
                 </div>
               `
-            : ''}
+            : ""}
         </div>
       `;
     }
 
     // Standard mode - render as a card
     return html`
-      <ha-card class="${cardClass} ${compactMode ? 'compact-mode' : ''} ${inHeaderMode ? 'in-header-mode' : ''}">
-        <div class="card-content">
-          ${renderMainContent()}
-        </div>
+      <ha-card
+        class="${cardClass} ${compactMode ? "compact-mode" : ""} ${inHeaderMode
+          ? "in-header-mode"
+          : ""}"
+      >
+        <div class="card-content">${renderMainContent()}</div>
       </ha-card>
     `;
   }
@@ -733,7 +790,10 @@ export class DateRangeSelectorCard extends LitElement {
 
       ha-card {
         padding: 16px;
-        background: var(--ha-card-background, var(--card-background-color, white));
+        background: var(
+          --ha-card-background,
+          var(--card-background-color, white)
+        );
         border-radius: var(--ha-card-border-radius, 12px);
         box-shadow: var(
           --ha-card-box-shadow,
@@ -919,7 +979,7 @@ export class DateRangeSelectorCard extends LitElement {
         color: var(--secondary-text-color);
       }
 
-      .picker-group input[type='date'],
+      .picker-group input[type="date"],
       .picker-group ha-date-input {
         padding: 10px;
         border: 1px solid var(--divider-color, #e0e0e0);
@@ -1039,7 +1099,10 @@ export class DateRangeSelectorCard extends LitElement {
       }
 
       .floating-popup {
-        background: var(--ha-card-background, var(--card-background-color, white));
+        background: var(
+          --ha-card-background,
+          var(--card-background-color, white)
+        );
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         max-width: 600px;
@@ -1157,7 +1220,7 @@ export class DateRangeSelectorCard extends LitElement {
 // Register the card
 (window as any).customCards = (window as any).customCards || [];
 (window as any).customCards.push({
-  type: 'custom:date-range-selector-card',
-  name: 'Date Range Selector',
-  description: 'A card for selecting date ranges with preset buttons',
+  type: "custom:date-range-selector-card",
+  name: "Date Range Selector",
+  description: "A card for selecting date ranges with preset buttons",
 });
