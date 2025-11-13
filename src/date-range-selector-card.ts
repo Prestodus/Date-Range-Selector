@@ -28,7 +28,7 @@ import {
 // Import the editor
 import "./editor";
 
-const VERSION = "v0.0.10";
+const VERSION = "v0.0.11";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c v${VERSION} `,
