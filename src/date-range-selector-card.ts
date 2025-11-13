@@ -42,6 +42,7 @@ export class DateRangeSelectorCard extends LitElement {
   @state() private currentEndDate: Date = endOfDay(new Date());
   @state() private showCustomPickers: boolean = false;
   @state() private isUpdating: boolean = false;
+  @state() private showFloatingPopup: boolean = false;
 
   public static getConfigElement() {
     return document.createElement('date-range-selector-editor');
@@ -80,6 +81,11 @@ export class DateRangeSelectorCard extends LitElement {
         month: true,
         year: true,
       },
+      use_button_group: false,
+      floating_mode: false,
+      floating_button_position: 'bottom-right',
+      floating_button_icon: 'mdi:calendar-range',
+      floating_button_text: '',
       ...config,
     };
 
@@ -428,6 +434,14 @@ export class DateRangeSelectorCard extends LitElement {
     }
   }
 
+  private _toggleFloatingPopup(): void {
+    this.showFloatingPopup = !this.showFloatingPopup;
+  }
+
+  private _closeFloatingPopup(): void {
+    this.showFloatingPopup = false;
+  }
+
   private _formatDateRange(): string {
     try {
       const startFormatted = format(this.currentStartDate, 'MMMM d, yyyy');
@@ -453,6 +467,8 @@ export class DateRangeSelectorCard extends LitElement {
     const inHeaderMode = this.config.display_mode === 'in-header';
     const showDateDisplay = !this.config.hide_date_display;
     const datePosition = this.config.date_display_position || 'above';
+    const useButtonGroup = this.config.use_button_group === true;
+    const floatingMode = this.config.floating_mode === true;
 
     // Render date display template
     const renderDateDisplay = () => {
@@ -473,144 +489,197 @@ export class DateRangeSelectorCard extends LitElement {
       `;
     };
 
-    return html`
-      <ha-card class="${cardClass} ${compactMode ? 'compact-mode' : ''} ${inHeaderMode ? 'in-header-mode' : ''}">
-        <div class="card-content">
-          <!-- Date Range Display (Above) -->
-          ${datePosition === 'above' ? renderDateDisplay() : ''}
+    // Render the button row content
+    const renderButtonRow = () => html`
+      <div class="button-row ${useButtonGroup ? 'button-group' : ''}">
+        ${this.config.show_arrows
+          ? html`
+              <button
+                class="nav-button"
+                @click=${() => this._handleNavigation('prev')}
+                ?disabled=${!this._canNavigatePrev() || this.isUpdating}
+                title="Previous"
+              >
+                <ha-icon icon="mdi:chevron-left"></ha-icon>
+              </button>
+            `
+          : ''}
 
-          <!-- Preset Buttons Row -->
-          <div class="button-row">
-            ${this.config.show_arrows
-              ? html`
-                  <button
-                    class="nav-button"
-                    @click=${() => this._handleNavigation('prev')}
-                    ?disabled=${!this._canNavigatePrev() || this.isUpdating}
-                    title="Previous"
-                  >
-                    <ha-icon icon="mdi:chevron-left"></ha-icon>
-                  </button>
-                `
-              : ''}
+        <button
+          class="preset-button ${isToday(this.currentStartDate) && this.selectedPreset === 'day' ? 'active' : ''}"
+          @click=${this._handleToday}
+          ?disabled=${this.isUpdating}
+          title="${this._getTodayButtonLabel()}"
+        >
+          ${this.config.today_button_type === 'icon'
+            ? html`<ha-icon icon="mdi:calendar-today"></ha-icon>`
+            : html`${this._getTodayButtonLabel()}`}
+        </button>
 
-            <button
-              class="preset-button ${isToday(this.currentStartDate) && this.selectedPreset === 'day' ? 'active' : ''}"
-              @click=${this._handleToday}
-              ?disabled=${this.isUpdating}
-              title="${this._getTodayButtonLabel()}"
-            >
-              ${this.config.today_button_type === 'icon'
-                ? html`<ha-icon icon="mdi:calendar-today"></ha-icon>`
-                : html`${this._getTodayButtonLabel()}`}
-            </button>
+        ${this._shouldShowRangeButton('day')
+          ? html`
+              <button
+                class="preset-button ${this.selectedPreset === 'day' ? 'active' : ''}"
+                @click=${() => this._handlePreset('day')}
+                ?disabled=${this.isUpdating}
+              >
+                Day
+              </button>
+            `
+          : ''}
 
-            ${this._shouldShowRangeButton('day')
-              ? html`
-                  <button
-                    class="preset-button ${this.selectedPreset === 'day' ? 'active' : ''}"
-                    @click=${() => this._handlePreset('day')}
-                    ?disabled=${this.isUpdating}
-                  >
-                    Day
-                  </button>
-                `
-              : ''}
+        ${this._shouldShowRangeButton('week')
+          ? html`
+              <button
+                class="preset-button ${this.selectedPreset === 'week' ? 'active' : ''}"
+                @click=${() => this._handlePreset('week')}
+                ?disabled=${this.isUpdating}
+              >
+                Week
+              </button>
+            `
+          : ''}
 
-            ${this._shouldShowRangeButton('week')
-              ? html`
-                  <button
-                    class="preset-button ${this.selectedPreset === 'week' ? 'active' : ''}"
-                    @click=${() => this._handlePreset('week')}
-                    ?disabled=${this.isUpdating}
-                  >
-                    Week
-                  </button>
-                `
-              : ''}
+        ${this._shouldShowRangeButton('month')
+          ? html`
+              <button
+                class="preset-button ${this.selectedPreset === 'month' ? 'active' : ''}"
+                @click=${() => this._handlePreset('month')}
+                ?disabled=${this.isUpdating}
+              >
+                Month
+              </button>
+            `
+          : ''}
 
-            ${this._shouldShowRangeButton('month')
-              ? html`
-                  <button
-                    class="preset-button ${this.selectedPreset === 'month' ? 'active' : ''}"
-                    @click=${() => this._handlePreset('month')}
-                    ?disabled=${this.isUpdating}
-                  >
-                    Month
-                  </button>
-                `
-              : ''}
+        ${this._shouldShowRangeButton('year')
+          ? html`
+              <button
+                class="preset-button ${this.selectedPreset === 'year' ? 'active' : ''}"
+                @click=${() => this._handlePreset('year')}
+                ?disabled=${this.isUpdating}
+              >
+                Year
+              </button>
+            `
+          : ''}
 
-            ${this._shouldShowRangeButton('year')
-              ? html`
-                  <button
-                    class="preset-button ${this.selectedPreset === 'year' ? 'active' : ''}"
-                    @click=${() => this._handlePreset('year')}
-                    ?disabled=${this.isUpdating}
-                  >
-                    Year
-                  </button>
-                `
-              : ''}
+        ${this.config.show_custom_range
+          ? html`
+              <button
+                class="preset-button ${this.selectedPreset === 'custom' ? 'active' : ''}"
+                @click=${() => this._handlePreset('custom')}
+                ?disabled=${this.isUpdating}
+              >
+                Custom
+              </button>
+            `
+          : ''}
 
-            ${this.config.show_custom_range
-              ? html`
-                  <button
-                    class="preset-button ${this.selectedPreset === 'custom' ? 'active' : ''}"
-                    @click=${() => this._handlePreset('custom')}
-                    ?disabled=${this.isUpdating}
-                  >
-                    Custom
-                  </button>
-                `
-              : ''}
+        ${this.config.show_arrows
+          ? html`
+              <button
+                class="nav-button"
+                @click=${() => this._handleNavigation('next')}
+                ?disabled=${!this._canNavigateNext() || this.isUpdating}
+                title="Next"
+              >
+                <ha-icon icon="mdi:chevron-right"></ha-icon>
+              </button>
+            `
+          : ''}
+      </div>
+    `;
 
-            ${this.config.show_arrows
-              ? html`
-                  <button
-                    class="nav-button"
-                    @click=${() => this._handleNavigation('next')}
-                    ?disabled=${!this._canNavigateNext() || this.isUpdating}
-                    title="Next"
-                  >
-                    <ha-icon icon="mdi:chevron-right"></ha-icon>
-                  </button>
-                `
-              : ''}
+    // Render custom date pickers
+    const renderCustomPickers = () => {
+      if (!this.showCustomPickers) return '';
+      
+      return html`
+        <div class="custom-range-pickers">
+          <div class="picker-group">
+            <ha-date-input
+              .locale=${this.hass.locale}
+              .value=${format(this.currentStartDate, 'yyyy-MM-dd')}
+              .label=${'Start Date'}
+              @value-changed=${this._handleCustomStartChange}
+              .min=${this.config.min_date || ''}
+              .max=${this.config.disable_future ? format(new Date(), 'yyyy-MM-dd') : ''}
+              .disabled=${this.isUpdating}
+            ></ha-date-input>
           </div>
+          <div class="picker-group">
+            <ha-date-input
+              .locale=${this.hass.locale}
+              .value=${format(this.currentEndDate, 'yyyy-MM-dd')}
+              .label=${'End Date'}
+              @value-changed=${this._handleCustomEndChange}
+              .min=${format(this.currentStartDate, 'yyyy-MM-dd')}
+              .max=${this.config.disable_future ? format(new Date(), 'yyyy-MM-dd') : ''}
+              .disabled=${this.isUpdating}
+            ></ha-date-input>
+          </div>
+        </div>
+      `;
+    };
 
-          <!-- Date Range Display (Below) -->
-          ${datePosition === 'below' ? renderDateDisplay() : ''}
+    // Render main content
+    const renderMainContent = () => html`
+      <!-- Date Range Display (Above) -->
+      ${datePosition === 'above' ? renderDateDisplay() : ''}
 
-          <!-- Custom Date Pickers -->
-          ${this.showCustomPickers
+      <!-- Preset Buttons Row -->
+      ${renderButtonRow()}
+
+      <!-- Date Range Display (Below) -->
+      ${datePosition === 'below' ? renderDateDisplay() : ''}
+
+      <!-- Custom Date Pickers -->
+      ${renderCustomPickers()}
+    `;
+
+    // If floating mode, render the floating button and popup
+    if (floatingMode) {
+      const position = this.config.floating_button_position || 'bottom-right';
+      const icon = this.config.floating_button_icon || 'mdi:calendar-range';
+      const text = this.config.floating_button_text || '';
+
+      return html`
+        <div class="floating-container">
+          <button
+            class="floating-button ${position}"
+            @click=${this._toggleFloatingPopup}
+            title="Date Range Selector"
+          >
+            ${text ? html`<span>${text}</span>` : html`<ha-icon icon="${icon}"></ha-icon>`}
+          </button>
+
+          ${this.showFloatingPopup
             ? html`
-                <div class="custom-range-pickers">
-                  <div class="picker-group">
-                    <ha-date-input
-                      .locale=${this.hass.locale}
-                      .value=${format(this.currentStartDate, 'yyyy-MM-dd')}
-                      .label=${'Start Date'}
-                      @value-changed=${this._handleCustomStartChange}
-                      .min=${this.config.min_date || ''}
-                      .max=${this.config.disable_future ? format(new Date(), 'yyyy-MM-dd') : ''}
-                      .disabled=${this.isUpdating}
-                    ></ha-date-input>
-                  </div>
-                  <div class="picker-group">
-                    <ha-date-input
-                      .locale=${this.hass.locale}
-                      .value=${format(this.currentEndDate, 'yyyy-MM-dd')}
-                      .label=${'End Date'}
-                      @value-changed=${this._handleCustomEndChange}
-                      .min=${format(this.currentStartDate, 'yyyy-MM-dd')}
-                      .max=${this.config.disable_future ? format(new Date(), 'yyyy-MM-dd') : ''}
-                      .disabled=${this.isUpdating}
-                    ></ha-date-input>
+                <div class="floating-popup-overlay" @click=${this._closeFloatingPopup}>
+                  <div class="floating-popup" @click=${(e: Event) => e.stopPropagation()}>
+                    <div class="popup-header">
+                      <h3>Date Range Selector</h3>
+                      <button class="close-button" @click=${this._closeFloatingPopup}>
+                        <ha-icon icon="mdi:close"></ha-icon>
+                      </button>
+                    </div>
+                    <div class="popup-content">
+                      ${renderMainContent()}
+                    </div>
                   </div>
                 </div>
               `
             : ''}
+        </div>
+      `;
+    }
+
+    // Standard mode - render as a card
+    return html`
+      <ha-card class="${cardClass} ${compactMode ? 'compact-mode' : ''} ${inHeaderMode ? 'in-header-mode' : ''}">
+        <div class="card-content">
+          ${renderMainContent()}
         </div>
       </ha-card>
     `;
@@ -704,6 +773,40 @@ export class DateRangeSelectorCard extends LitElement {
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
+      }
+
+      /* Button Group Styles */
+      .button-row.button-group {
+        gap: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .button-row.button-group .preset-button,
+      .button-row.button-group .nav-button {
+        border-radius: 0;
+        border-right-width: 0;
+        margin: 0;
+      }
+
+      .button-row.button-group .preset-button:first-child,
+      .button-row.button-group .nav-button:first-child {
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+      }
+
+      .button-row.button-group .preset-button:last-child,
+      .button-row.button-group .nav-button:last-child {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        border-right-width: 1px;
+      }
+
+      .button-row.button-group .preset-button.active {
+        position: relative;
+        z-index: 1;
+        border-right-width: 1px;
       }
 
       .preset-button,
@@ -800,9 +903,163 @@ export class DateRangeSelectorCard extends LitElement {
         padding: 4px;
       }
 
+      /* Floating Mode Styles */
+      .floating-container {
+        position: relative;
+      }
+
+      .floating-button {
+        position: fixed;
+        z-index: 1000;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: var(--text-primary-color, white);
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 0;
+      }
+
+      .floating-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+      }
+
+      .floating-button ha-icon {
+        --mdc-icon-size: 24px;
+      }
+
+      .floating-button span {
+        padding: 0 8px;
+        white-space: nowrap;
+      }
+
+      .floating-button.top-left {
+        top: 16px;
+        left: 16px;
+      }
+
+      .floating-button.top-right {
+        top: 16px;
+        right: 16px;
+      }
+
+      .floating-button.bottom-left {
+        bottom: 16px;
+        left: 16px;
+      }
+
+      .floating-button.bottom-right {
+        bottom: 16px;
+        right: 16px;
+      }
+
+      .floating-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        animation: fadeIn 0.2s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .floating-popup {
+        background: var(--ha-card-background, var(--card-background-color, white));
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .popup-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--divider-color, #e0e0e0);
+      }
+
+      .popup-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--primary-text-color);
+      }
+
+      .close-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background 0.2s ease;
+        color: var(--primary-text-color);
+      }
+
+      .close-button:hover {
+        background: var(--secondary-background-color, #f5f5f5);
+      }
+
+      .close-button ha-icon {
+        --mdc-icon-size: 20px;
+      }
+
+      .popup-content {
+        padding: 20px;
+      }
+
+      .popup-content .card-content {
+        padding: 0;
+      }
+
       @media (max-width: 600px) {
         .button-row {
           gap: 4px;
+        }
+
+        .button-row.button-group {
+          flex-wrap: nowrap;
+          overflow-x: auto;
         }
 
         .preset-button,
@@ -814,6 +1071,16 @@ export class DateRangeSelectorCard extends LitElement {
 
         .custom-range-pickers {
           grid-template-columns: 1fr;
+        }
+
+        .floating-popup {
+          max-height: 95vh;
+          border-radius: 16px 16px 0 0;
+        }
+
+        .floating-popup-overlay {
+          align-items: flex-end;
+          padding: 0;
         }
       }
 

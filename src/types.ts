@@ -15,6 +15,11 @@ export interface DateRangeSelectorCardConfig extends Record<string, any> {
   display_mode?: 'default' | 'compact' | 'in-header'; // New: display mode
   visible_range_modes?: RangeModeVisibility; // New: which range modes to show
   default_range_mode?: PresetType; // New: default range mode selection
+  use_button_group?: boolean; // New: use connected button groups
+  floating_mode?: boolean; // New: enable floating button with popup
+  floating_button_position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; // New: position of floating button
+  floating_button_icon?: string; // New: custom icon for floating button
+  floating_button_text?: string; // New: custom text for floating button
 }
 
 export interface RangeModeVisibility {
