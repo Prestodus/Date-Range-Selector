@@ -407,8 +407,8 @@ export class DateRangeSelectorEditor extends LitElement {
             type="date"
             id="min_date"
             .configValue=${"min_date"}
-            .value=${this.config.min_date || ""}
-            @input=${this._valueChanged}
+            .value=${this.config.min_date ?? ""}
+            @change=${this._valueChanged}
           />
           <div class="helper-text">
             Earliest selectable date (YYYY-MM-DD format). Leave empty for no
@@ -529,7 +529,7 @@ export class DateRangeSelectorEditor extends LitElement {
                 <ha-selector
                   .hass=${this.hass}
                   .selector=${{ icon: {} }}
-                  .value=${this.config.floating_button_icon ||
+                  .value=${this.config.floating_button_icon ??
                   "mdi:calendar-range"}
                   @value-changed=${(e: CustomEvent) =>
                     this._entityChanged(e, "floating_button_icon")}
@@ -546,7 +546,7 @@ export class DateRangeSelectorEditor extends LitElement {
                   type="text"
                   id="floating_button_text"
                   .configValue=${"floating_button_text"}
-                  .value=${this.config.floating_button_text || ""}
+                  .value=${this.config.floating_button_text ?? ""}
                   @input=${this._valueChanged}
                   placeholder="Leave empty to show icon"
                 />
@@ -563,7 +563,7 @@ export class DateRangeSelectorEditor extends LitElement {
                   type="text"
                   id="popup_title"
                   .configValue=${"popup_title"}
-                  .value=${this.config.popup_title || "Date Range Selector"}
+                  .value=${this.config.popup_title ?? "Date Range Selector"}
                   @input=${this._valueChanged}
                   placeholder="Date Range Selector"
                 />

@@ -28,15 +28,20 @@ import {
 // Import the editor
 import "./editor";
 
-// Load HA components for ha-date-input
+// Load HA components for ha-date-input without causing entity errors
 const loadHaComponents = async () => {
   if (customElements.get("ha-date-input")) return;
   const helpers = await (window as any).loadCardHelpers?.();
   if (!helpers) return;
   try {
-    const card = await helpers.createCardElement({ type: "entity" });
-    if (!card) return;
-    await card.getConfigElement();
+    // Using an entities card with no entities to load common components
+    const card = await helpers.createCardElement({
+      type: "entities",
+      entities: [],
+    });
+    if (card?.getConfigElement) {
+      await card.getConfigElement();
+    }
   } catch {
     // Silently fail if component loading fails
   }
@@ -468,6 +473,28 @@ export class DateRangeSelectorCard extends LitElement {
     }
   }
 
+  private _handleCustomStartChangeNative(e: Event): void {
+    const input = e.target as HTMLInputElement;
+    const value = input?.value;
+    if (value) {
+      const newStart = parseISO(value);
+      let newEnd = this.currentEndDate;
+      if (isAfter(newStart, this.currentEndDate)) {
+        newEnd = newStart;
+      }
+      this._setDateRange(newStart, newEnd);
+    }
+  }
+
+  private _handleCustomEndChangeNative(e: Event): void {
+    const input = e.target as HTMLInputElement;
+    const value = input?.value;
+    if (value) {
+      const newEnd = parseISO(value);
+      this._setDateRange(this.currentStartDate, newEnd);
+    }
+  }
+
   private _getTodayButtonLabel(): string {
     switch (this.selectedPreset) {
       case "day":
@@ -557,6 +584,7 @@ export class DateRangeSelectorCard extends LitElement {
     const useButtonGroup = this.config.use_button_group === true;
     const floatingMode =
       this.config.floating_mode === true && !this._isEditMode();
+    const hasHaDateInput = !!customElements.get("ha-date-input");
 
     // Render date display template
     const renderDateDisplay = () => {
@@ -686,35 +714,69 @@ export class DateRangeSelectorCard extends LitElement {
     const renderCustomPickers = () => {
       if (!this.showCustomPickers) return html``;
 
+      if (hasHaDateInput) {
+        return html`
+          <div class="custom-range-pickers">
+            <div class="picker-group">
+              <ha-date-input
+                .hass=${this.hass}
+                .locale=${this.hass.locale}
+                .value=${format(this.currentStartDate, "yyyy-MM-dd")}
+                .label=${"Start Date"}
+                @value-changed=${this._handleCustomStartChange}
+                .min=${this.config.min_date ?? ""}
+                .max=${this.config.disable_future
+                  ? format(new Date(), "yyyy-MM-dd")
+                  : ""}
+                .disabled=${this.isUpdating}
+              ></ha-date-input>
+            </div>
+            <div class="picker-group">
+              <ha-date-input
+                .hass=${this.hass}
+                .locale=${this.hass.locale}
+                .value=${format(this.currentEndDate, "yyyy-MM-dd")}
+                .label=${"End Date"}
+                @value-changed=${this._handleCustomEndChange}
+                .min=${format(this.currentStartDate, "yyyy-MM-dd")}
+                .max=${this.config.disable_future
+                  ? format(new Date(), "yyyy-MM-dd")
+                  : ""}
+                .disabled=${this.isUpdating}
+              ></ha-date-input>
+            </div>
+          </div>
+        `;
+      }
+
+      // Fallback to native inputs if ha-date-input is not available
       return html`
         <div class="custom-range-pickers">
           <div class="picker-group">
-            <ha-date-input
-              .hass=${this.hass}
-              .locale=${this.hass.locale}
+            <label>Start Date</label>
+            <input
+              type="date"
               .value=${format(this.currentStartDate, "yyyy-MM-dd")}
-              .label=${"Start Date"}
-              @value-changed=${this._handleCustomStartChange}
-              .min=${this.config.min_date || ""}
-              .max=${this.config.disable_future
+              min=${this.config.min_date ?? ""}
+              max=${this.config.disable_future
                 ? format(new Date(), "yyyy-MM-dd")
                 : ""}
-              .disabled=${this.isUpdating}
-            ></ha-date-input>
+              ?disabled=${this.isUpdating}
+              @change=${this._handleCustomStartChangeNative}
+            />
           </div>
           <div class="picker-group">
-            <ha-date-input
-              .hass=${this.hass}
-              .locale=${this.hass.locale}
+            <label>End Date</label>
+            <input
+              type="date"
               .value=${format(this.currentEndDate, "yyyy-MM-dd")}
-              .label=${"End Date"}
-              @value-changed=${this._handleCustomEndChange}
-              .min=${format(this.currentStartDate, "yyyy-MM-dd")}
-              .max=${this.config.disable_future
+              min=${format(this.currentStartDate, "yyyy-MM-dd")}
+              max=${this.config.disable_future
                 ? format(new Date(), "yyyy-MM-dd")
                 : ""}
-              .disabled=${this.isUpdating}
-            ></ha-date-input>
+              ?disabled=${this.isUpdating}
+              @change=${this._handleCustomEndChangeNative}
+            />
           </div>
         </div>
       `;
@@ -1241,7 +1303,7 @@ if (!(window as any).customCards) {
   (window as any).customCards = [];
 }
 (window as any).customCards.push({
-  type: "custom:date-range-selector-card",
+  type: "date-range-selector-card",
   name: "Date Range Selector",
   description: "A card for selecting date ranges with preset buttons",
   preview: false,
