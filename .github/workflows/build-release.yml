@@ -25,9 +25,20 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Detect PAT presence
+        id: detect_pat
+        env:
+          RT: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -n "$RT" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # If a Personal Access Token is provided, prefer it for release creation
       - name: Create GitHub Release (PAT)
-        if: ${{ secrets.RELEASE_TOKEN != '' }}
+        if: steps.detect_pat.outputs.present == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -43,7 +54,7 @@ jobs:
 
       # Fallback to GITHUB_TOKEN if PAT is not configured
       - name: Create GitHub Release (GITHUB_TOKEN)
-        if: ${{ secrets.RELEASE_TOKEN == '' }}
+        if: steps.detect_pat.outputs.present == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
