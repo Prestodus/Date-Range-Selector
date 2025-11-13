@@ -32,6 +32,41 @@ This is a custom Lovelace card for Home Assistant that provides an intuitive int
 - Node.js v16 or higher
 - npm or yarn
 
+````instructions
+# GitHub Copilot Instructions for Date Range Selector Card
+
+## Project Overview
+
+This is a custom Lovelace card for Home Assistant that provides an intuitive interface for selecting date ranges. The card is built as a web component and integrates with Home Assistant's frontend framework.
+
+**Key Features:**
+- Preset date ranges (Day, Week, Month, Year)
+- Modern date pickers using Home Assistant's native components (ha-date-input)
+- Helper integration with automatic updates for range and offset entities
+- ApexCharts ready with built-in support for offset and range helpers
+- Navigation arrows for moving through time periods
+- Flexible range modes to show/hide specific range buttons
+- Display modes (Default and Compact layouts)
+- Smart entity selection with domain filtering and create-on-the-spot capability
+- Future date control and minimum date restrictions
+- ISO week support (Monday-Sunday)
+- Theme-aware styling using Home Assistant CSS variables
+
+## Technology Stack
+
+- **Language**: TypeScript (target: ES2020)
+- **UI Framework**: [Lit](https://lit.dev/) - Web components library with reactive properties and decorators
+- **Date Handling**: [date-fns](https://date-fns.org/) - Modern date utility library
+- **Build Tool**: [Rollup](https://rollupjs.org/) - Module bundler with TypeScript support
+- **Linting**: ESLint with TypeScript parser
+- **Formatting**: Prettier
+
+## Development Setup
+
+### Prerequisites
+- Node.js v16 or higher
+- npm or yarn
+
 ### Installation
 ```bash
 npm install
@@ -97,7 +132,7 @@ The card supports these configuration options:
 - `show_arrows` (optional, default: true): Show navigation arrows
 - `today_button_type` (optional, default: 'icon'): 'icon' or 'text' - When 'text', button label changes based on selected mode
 - `show_custom_range` (optional, default: false): Show custom button with modern date pickers
-- `hide_background` (optional, default: false): Remove card background, shadow, and border
+- `hide_background` (optional, default: false): Remove the card background, shadow, and border
 - `disable_future` (optional, default: false): Prevent future date selection
 - `min_date` (optional): Minimum selectable date (YYYY-MM-DD format)
 - `display_mode` (optional, default: 'default'): 'default' or 'compact'
@@ -126,8 +161,8 @@ The card supports optional helper entities for advanced use cases like ApexChart
 type: custom:apexcharts-card
 graph_span: ${range_entity}
 span:
-  end: day
-  offset: ${offset_entity}
+   end: day
+   offset: ${offset_entity}
 ```
 
 This allows charts to automatically update their time range when the date selector changes.
@@ -150,10 +185,10 @@ This allows charts to automatically update their time range when the date select
 1. Add the option to `DateRangeSelectorCardConfig` interface in `types.ts`
 2. Update `getStubConfig()` in both the main component and editor (leave entity fields empty)
 3. Add UI controls in `editor.ts` using appropriate selectors:
-   - Use `ha-selector` for entity selection with creation support
-   - For boolean options, use a structured layout: label above, helper text, then checkbox with descriptive span
-   - Group related options under `<h3>` section headers
-   - Use `mwc-button` for action buttons
+    - Use `ha-selector` for entity selection with creation support
+    - For boolean options, use a structured layout: label above, helper text, then checkbox with descriptive span
+    - Group related options under `<h3>` section headers
+    - Use `mwc-button` for action buttons
 4. Implement the functionality in the main component
 5. Update README.md documentation
 6. Update these copilot instructions if the change is architecturally significant
@@ -189,11 +224,11 @@ The card implements a locking mechanism to prevent issues when users rapidly int
 
 ### Styling Changes
 1. Use Home Assistant CSS custom properties:
-   - `--primary-color`: Active/selected state
-   - `--ha-card-background`: Card background
-   - `--primary-text-color`: Main text
-   - `--secondary-text-color`: Helper text
-   - `--divider-color`: Borders
+    - `--primary-color`: Active/selected state
+    - `--ha-card-background`: Card background
+    - `--primary-text-color`: Main text
+    - `--secondary-text-color`: Helper text
+    - `--divider-color`: Borders
 2. Keep styles within the component's shadow DOM
 3. Use `css` tagged template literals in static styles
 4. Support multiple display modes (default and compact)
@@ -216,8 +251,66 @@ The card implements a locking mechanism to prevent issues when users rapidly int
 
 ### Code Quality
 - Always run `npm run lint` before committing
-- Use `npm run format` to maintain consistent formatting
+- Use `npm run format` to maintain formatting
 - Ensure TypeScript compilation succeeds without errors
+
+## Git workflow & release process
+
+Follow this workflow to keep the repository history clean and reproducible.
+
+- Ignore build artifacts and node_modules locally. Commit only source files.
+- Use feature branches (feat/, fix/, chore/) and open PRs against `main`.
+- Keep commits small and focused. Use `git add -p` to stage hunks.
+- Rebase/squash locally before merging to keep `main` readable:
+   - `git rebase -i origin/main` (use fixup/squash as needed)
+
+Preferred handling of `dist/` (built bundle):
+
+- Option A (recommended): Do NOT commit `dist/`.
+   - Add `/dist` to `.gitignore` (this repo uses this approach by default).
+   - Build artifacts are produced by CI on release and uploaded to the GitHub Release as assets.
+
+- Option B (allowed for some custom-card workflows): Commit `dist/` only on release commits.
+   - Build locally, then create a single commit that updates `dist/` and tag the release.
+   - Avoid mixing source and build commits.
+
+Release steps (CI-backed, recommended):
+
+1. Update code on a feature branch and open a PR.
+2. Merge to `main` after CI checks (lint, typecheck, tests) pass.
+3. Create an annotated tag for release, e.g. `git tag -a v1.2.3 -m "v1.2.3"` and push the tag.
+4. GitHub Actions (configured) will build the bundle and attach `dist/date-range-selector-card.js` to the Release.
+
+Local quick-release (if you must build & commit `dist/`):
+
+```powershell
+git checkout -b release/v1.2.3
+npm ci; npm run build
+git add dist
+git commit -m "chore(release): build dist for v1.2.3"
+git tag -a v1.2.3 -m "Release v1.2.3"
+git push origin release/v1.2.3
+git push origin --tags
+```
+
+Pre-commit & CI checks
+
+- Use `lint-staged` + `husky` to run formatting/lint only on staged files to keep hooks fast.
+- Required checks in CI: `npm ci`, `npm run lint`, `npm run build`, `npm test` (if tests exist).
+
+Checklist for contributors
+
+- [ ] Work on a feature branch
+- [ ] Run `npm ci` before local development
+- [ ] Run `npm run lint` and fix issues before commit
+- [ ] Run `npm run build` if you are preparing a local release (not required for regular PRs)
+- [ ] Create a single release commit for `dist/` (if following Option B)
+
+Security
+
+- Never commit secrets. Use GitHub Secrets for CI credentials.
+
+If you want, I can add a GitHub Actions workflow that builds on tags and uploads the `dist` bundle to Releases, plus a `.gitignore` and a Husky + lint-staged config to enforce checks locally.
 
 ## Integration with Home Assistant
 
@@ -277,4 +370,6 @@ The card implements a locking mechanism to prevent issues when users rapidly int
 - [Lit Documentation](https://lit.dev/)
 - [date-fns Documentation](https://date-fns.org/)
 - [Home Assistant Custom Card Development](https://developers.home-assistant.io/docs/frontend/custom-ui/custom-card/)
-- [HACS Documentation](https://hacs.xyz/)
+- [HACS Documentation](https://hacs.xyz/) 
+
+````
