@@ -5,7 +5,11 @@
 
 A custom Lovelace card for Home Assistant that provides an intuitive interface for selecting date ranges. Perfect for filtering historical data, setting report periods, or any scenario where you need to work with date ranges.
 
+**Now includes a Popup Wrapper card** that can wrap any Home Assistant card in a beautiful popup!
+
 ## Features
+
+### Date Range Selector Card
 
 - 🎯 **Preset Date Ranges**: Quick access to Day, Week, Month, and Year ranges
 - 📅 **Modern Date Pickers**: Beautiful popup date pickers using Home Assistant's native components
@@ -15,11 +19,22 @@ A custom Lovelace card for Home Assistant that provides an intuitive interface f
 - 🎛️ **Flexible Range Modes**: Show/hide specific range buttons (day/week/month/year)
 - 🚫 **Future Date Control**: Optional restriction to prevent future date selection
 - 📍 **Minimum Date**: Set the earliest selectable date
-- 🎨 **Display Modes**: Choose between Default and Compact layouts
+- 🎨 **Display Modes**: Choose between Default, Compact, and In-Header layouts
 - 🎨 **Customizable Appearance**: Hide background and border, choose icon or text for "Today" button
+- 🔗 **Connected Button Groups**: Modern, connected button group style (NEW!)
+- 🎈 **Floating Mode**: Show as a floating action button with popup (NEW!)
 - 🔧 **Smart Entity Selection**: Entity selectors with domain filtering and create-on-the-spot capability
 - 🌐 **ISO Week Support**: Properly handles ISO weeks (Monday-Sunday)
 - ⚡ **Reactive**: Updates automatically when entities change
+
+### Popup Wrapper Card (NEW!)
+
+- 📦 **Wrap Any Card**: Put any Home Assistant card inside a beautiful popup
+- 🎈 **Floating Button Trigger**: Access via a customizable floating action button
+- 🎯 **Entity Trigger**: Display an entity card that opens the popup on click
+- ⚡ **Auto-Open**: Automatically open the popup on dashboard load
+- 🎨 **Responsive Design**: Mobile-friendly with smooth animations
+- 🔧 **Fully Customizable**: Custom icons, text, positioning, and titles
 
 ## Installation
 
@@ -36,13 +51,17 @@ A custom Lovelace card for Home Assistant that provides an intuitive interface f
 
 ### Manual Installation
 
-1. Download the `date-range-selector-card.js` file from the [latest release](https://github.com/Prestodus/Date-Range-Selector/releases)
-2. Copy it to your `config/www` folder
+1. Download the card files from the [latest release](https://github.com/Prestodus/Date-Range-Selector/releases):
+   - `date-range-selector-card.js` for the date range selector
+   - `popup-wrapper-card.js` for the popup wrapper (optional)
+2. Copy them to your `config/www` folder
 3. Add the following to your Lovelace resources:
 
 ```yaml
 resources:
   - url: /local/date-range-selector-card.js
+    type: module
+  - url: /local/popup-wrapper-card.js  # Optional, only if using popup wrapper
     type: module
 ```
 
@@ -102,7 +121,9 @@ These helpers will automatically update with:
 
 ## Usage
 
-### Basic Configuration
+### Date Range Selector Card
+
+#### Basic Configuration
 
 ```yaml
 type: custom:date-range-selector-card
@@ -110,7 +131,29 @@ start_entity: input_datetime.date_range_start
 end_entity: input_datetime.date_range_end
 ```
 
-### Full Configuration Example
+#### With Connected Button Group
+
+```yaml
+type: custom:date-range-selector-card
+start_entity: input_datetime.date_range_start
+end_entity: input_datetime.date_range_end
+use_button_group: true  # Modern, connected button style
+show_arrows: true
+```
+
+#### With Floating Mode
+
+```yaml
+type: custom:date-range-selector-card
+start_entity: input_datetime.date_range_start
+end_entity: input_datetime.date_range_end
+floating_mode: true
+floating_button_position: bottom-right
+floating_button_icon: mdi:calendar-range
+popup_title: Date Range Selector
+```
+
+#### Full Configuration Example
 
 ```yaml
 type: custom:date-range-selector-card
@@ -125,6 +168,7 @@ hide_background: false
 disable_future: true
 min_date: '2020-01-01'
 display_mode: default
+use_button_group: true
 visible_range_modes:
   day: true
   week: true
@@ -133,7 +177,55 @@ visible_range_modes:
 default_range_mode: week
 ```
 
+### Popup Wrapper Card
+
+Wrap any Home Assistant card in a beautiful popup!
+
+#### With Floating Button
+
+```yaml
+type: custom:popup-wrapper-card
+trigger_type: floating
+floating_button_position: bottom-right
+floating_button_icon: mdi:chart-line
+popup_title: My Charts
+card:
+  type: custom:apexcharts-card
+  series:
+    - entity: sensor.temperature
+```
+
+#### With Entity Trigger
+
+```yaml
+type: custom:popup-wrapper-card
+trigger_type: entity
+trigger_entity: sensor.temperature
+popup_title: Temperature Details
+card:
+  type: history-graph
+  entities:
+    - sensor.temperature
+    - sensor.humidity
+```
+
+#### Auto-Open on Load
+
+```yaml
+type: custom:popup-wrapper-card
+trigger_type: auto
+auto_open: true
+popup_title: Important Notice
+card:
+  type: markdown
+  content: |
+    # Welcome!
+    This is your dashboard.
+```
+
 ## Configuration Options
+
+### Date Range Selector Card
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -145,13 +237,40 @@ default_range_mode: week
 | `today_button_type` | string | `icon` | Display "Today" button as `icon` or `text` |
 | `show_custom_range` | boolean | `false` | Show "Custom" button with modern date pickers |
 | `hide_background` | boolean | `false` | Remove card background, shadow, and border |
+| `hide_date_display` | boolean | `false` | Hide the date range display |
+| `date_display_position` | string | `above` | Position of date display: `above` or `below` |
 | `disable_future` | boolean | `false` | Prevent selection of future dates (caps at today) |
 | `min_date` | string | - | Minimum selectable date in `YYYY-MM-DD` format |
-| `display_mode` | string | `default` | Display mode: `default` or `compact` |
+| `display_mode` | string | `default` | Display mode: `default`, `compact`, or `in-header` |
+| `use_button_group` | boolean | `false` | Use connected button group style (NEW!) |
+| `floating_mode` | boolean | `false` | Show as floating button with popup (NEW!) |
+| `floating_button_position` | string | `bottom-right` | Position: `top-left`, `top-right`, `bottom-left`, `bottom-right` |
+| `floating_button_icon` | string | `mdi:calendar-range` | Icon for floating button |
+| `floating_button_text` | string | - | Optional text for floating button (overrides icon) |
 | `visible_range_modes` | object | All `true` | Control which range mode buttons to show (day/week/month/year) |
 | `default_range_mode` | string | - | Default range mode on load (day/week/month/year). Defaults to smallest visible if not set |
 
+### Popup Wrapper Card
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `card` | object | **Required** | Configuration of the card to wrap in the popup |
+| `trigger_type` | string | `floating` | How to open popup: `floating`, `entity`, or `auto` |
+| `trigger_entity` | string | - | Entity to display as trigger (for `entity` mode) |
+| `popup_title` | string | `Card` | Title displayed in the popup header |
+| `close_on_click_outside` | boolean | `true` | Close popup when clicking outside |
+| `auto_open` | boolean | `false` | Auto-open popup on dashboard load (for `auto` mode) |
+| `floating_button_position` | string | `bottom-right` | Position: `top-left`, `top-right`, `bottom-left`, `bottom-right` |
+| `floating_button_icon` | string | `mdi:card` | Icon for floating button (for `floating` mode) |
+| `floating_button_text` | string | - | Optional text for floating button (overrides icon) |
+
 ### Option Details
+
+#### `use_button_group` (Date Range Selector)
+When enabled, buttons are displayed in a connected group with no gaps between them, creating a modern segmented control appearance. The styling automatically adapts to all display modes (default, compact, in-header).
+
+#### `floating_mode` (Date Range Selector)
+Enables a floating action button that opens the date selector in a popup. Perfect for saving space on your dashboard while keeping the date selector easily accessible. The popup is fully responsive and mobile-friendly.
 
 #### `start_entity` & `end_entity`
 These are the entity IDs of your `input_datetime` helpers. The card will update these entities when date ranges are selected. Use the entity selector in the card editor to easily pick or create these helpers.
@@ -269,12 +388,83 @@ automation:
         entity_id: sensor.your_sensor
 ```
 
+## Popup Wrapper Card Use Cases
+
+The Popup Wrapper card is incredibly versatile and can enhance your dashboard in many ways:
+
+### Hide Complex Cards Until Needed
+
+Save dashboard space by keeping detailed cards (like charts, history graphs, or entity lists) in popups:
+
+```yaml
+type: custom:popup-wrapper-card
+trigger_type: floating
+floating_button_position: bottom-left
+floating_button_icon: mdi:chart-timeline-variant
+popup_title: Energy Usage Details
+card:
+  type: vertical-stack
+  cards:
+    - type: custom:apexcharts-card
+      # ... your chart config
+    - type: entities
+      # ... your entities
+```
+
+### Create Dashboard "Drawers"
+
+Use entity triggers to create expandable sections:
+
+```yaml
+type: custom:popup-wrapper-card
+trigger_type: entity
+trigger_entity: sensor.home_temperature
+popup_title: Climate Control
+card:
+  type: thermostat
+  entity: climate.home
+```
+
+### Display Important Notices
+
+Auto-open popups for announcements or alerts:
+
+```yaml
+type: custom:popup-wrapper-card
+trigger_type: auto
+auto_open: true
+popup_title: System Alert
+card:
+  type: markdown
+  content: |
+    ⚠️ **Maintenance Scheduled**
+    The system will be offline tonight.
+```
+
+### Mobile-Optimized Controls
+
+Place detailed controls in floating popups for better mobile UX:
+
+```yaml
+type: custom:popup-wrapper-card
+trigger_type: floating
+floating_button_position: bottom-right
+floating_button_icon: mdi:lightbulb-group
+popup_title: Lighting Control
+card:
+  type: entities
+  entities:
+    - light.living_room
+    - light.bedroom
+    - light.kitchen
+```
+
 ## Styling
 
-The card uses Home Assistant's built-in CSS theme variables, so it automatically adapts to your theme:
+Both cards use Home Assistant's built-in CSS theme variables, so they automatically adapt to your theme:
 
-- `--primary-color`: Active button color
-- `--ha-card-background`: Card background
+- `--primary-color`: Active button color and floating button background
+- `--ha-card-background`: Card and popup background
 - `--primary-text-color`: Main text color
 - `--secondary-text-color`: Helper text color
 - `--divider-color`: Border colors
