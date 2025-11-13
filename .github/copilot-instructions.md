@@ -29,7 +29,7 @@ This is a custom Lovelace card for Home Assistant that provides an intuitive int
 ## Development Setup
 
 ### Prerequisites
-- Node.js v16 or higher
+- Node.js v18.12 or higher
 - npm or yarn
 
 ````instructions
@@ -64,8 +64,8 @@ This is a custom Lovelace card for Home Assistant that provides an intuitive int
 ## Development Setup
 
 ### Prerequisites
-- Node.js v16 or higher
-- npm or yarn
+ - Node.js v18.12 or higher
+ - npm or yarn
 
 ### Installation
 ```bash
