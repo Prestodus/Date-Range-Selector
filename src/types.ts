@@ -26,6 +26,7 @@ export interface DateRangeSelectorCardConfig extends Record<string, any> {
   floating_button_text?: string; // New: custom text for floating button
   popup_title?: string; // New: custom title for floating popup
   popup_icon?: string; // New: custom icon for floating popup header
+  debug_logging?: boolean; // New: enable verbose debug logging
 }
 
 export interface RangeModeVisibility {

@@ -588,6 +588,27 @@ export class DateRangeSelectorEditor extends LitElement {
               </div>
             `
           : ""}
+
+        <hr />
+
+        <h3>Debugging</h3>
+        <div class="config-row checkbox-config">
+          <label for="debug_logging">Enable Debug Logging</label>
+          <div class="helper-text">
+            Outputs verbose console messages (console.debug) for troubleshooting
+            popup visibility and dialog detection.
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              id="debug_logging"
+              .configValue=${"debug_logging"}
+              .checked=${this.config.debug_logging === true}
+              @change=${this._valueChanged}
+            />
+            <span>Enable verbose debug logging</span>
+          </label>
+        </div>
       </div>
     `;
   }
