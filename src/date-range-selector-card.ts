@@ -91,7 +91,7 @@ const forceLoadHaDateInput = async (hass: HomeAssistant | undefined) => {
   return !!customElements.get("ha-date-input");
 };
 
-const VERSION = "v0.0.24";
+const VERSION = "v0.0.25";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c ${VERSION} `,
@@ -117,6 +117,62 @@ export class DateRangeSelectorCard extends LitElement {
   private _shouldRestoreFloatingPopup: boolean = false;
   @state() private _popupRendered: boolean = false;
   private _popupCloseTimeout?: number;
+  private _dialogObserver?: MutationObserver;
+
+  private _checkExternalDialogPresent(): boolean {
+    try {
+      // Detect HA dialogs that may overlap: date picker dialog or generic ha-dialog
+      return (
+        !!document.querySelector("ha-dialog-date-picker") ||
+        !!document.querySelector("ha-dialog")
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  private _handleDialogPresenceChange(): void {
+    const present = this._checkExternalDialogPresent();
+    if (present && !this._externalDialogOpen) {
+      this._externalDialogOpen = true;
+      if (this._popupRendered && this.showFloatingPopup) {
+        this._shouldRestoreFloatingPopup = true;
+        this._beginCloseFloatingPopup();
+      }
+    } else if (!present && this._externalDialogOpen) {
+      this._externalDialogOpen = false;
+      if (this._shouldRestoreFloatingPopup) {
+        setTimeout(() => {
+          this._openFloatingPopup();
+          this._shouldRestoreFloatingPopup = false;
+        }, 50);
+      }
+    }
+  }
+
+  private _ensureDialogObserver(): void {
+    if (this._dialogObserver) return;
+    try {
+      this._dialogObserver = new MutationObserver(() => {
+        this._handleDialogPresenceChange();
+      });
+      this._dialogObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+    } catch {
+      // swallow
+    }
+  }
+
+  private _disconnectDialogObserver(): void {
+    try {
+      this._dialogObserver?.disconnect();
+    } catch {
+      // ignore
+    }
+    this._dialogObserver = undefined;
+  }
 
   private _onGlobalFocusIn = (e: FocusEvent) => {
     try {
@@ -131,9 +187,9 @@ export class DateRangeSelectorCard extends LitElement {
       if (foundDialog) {
         if (!this._externalDialogOpen) {
           this._externalDialogOpen = true;
-          if (this.showFloatingPopup) {
+          if (this._popupRendered && this.showFloatingPopup) {
             this._shouldRestoreFloatingPopup = true;
-            this.showFloatingPopup = false;
+            this._beginCloseFloatingPopup();
           }
         }
       } else {
@@ -142,7 +198,7 @@ export class DateRangeSelectorCard extends LitElement {
           if (this._shouldRestoreFloatingPopup) {
             // small timeout to allow dialog to finish closing
             setTimeout(() => {
-              this.showFloatingPopup = true;
+              this._openFloatingPopup();
               this._shouldRestoreFloatingPopup = false;
             }, 50);
           }
@@ -235,6 +291,7 @@ export class DateRangeSelectorCard extends LitElement {
     super.connectedCallback();
     this._initHaDateInput();
     window.addEventListener("focusin", this._onGlobalFocusIn as EventListener);
+    this._ensureDialogObserver();
   }
 
   disconnectedCallback(): void {
@@ -243,6 +300,7 @@ export class DateRangeSelectorCard extends LitElement {
       "focusin",
       this._onGlobalFocusIn as EventListener,
     );
+    this._disconnectDialogObserver();
   }
 
   protected updated(changedProperties: PropertyValues): void {
