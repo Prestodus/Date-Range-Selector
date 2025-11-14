@@ -1114,57 +1114,19 @@ export class DateRangeSelectorCard extends LitElement {
       }
 
       .custom-range-pickers {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
+        display: flex;
+        justify-content: center;
         padding: 16px;
         background: var(--secondary-background-color, #f5f5f5);
         border-radius: 8px;
       }
 
-      .picker-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .picker-group label {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--secondary-text-color);
-      }
-
-      .picker-group input[type="date"],
-      .picker-group ha-date-input {
-        padding: 10px;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 4px;
-        background: var(--card-background-color, white);
-        color: var(--primary-text-color);
-        font-size: 14px;
-        font-family: inherit;
-      }
-
-      .picker-group ha-date-input {
-        padding: 0;
-        border: none;
-      }
-
-      .dialog-input {
+      .custom-range-pickers ha-date-range-picker {
         width: 100%;
-        text-align: left;
-        padding: 10px;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 4px;
-        background: var(--card-background-color, white);
-        color: var(--primary-text-color);
-        font-size: 14px;
-        font-family: inherit;
-        cursor: pointer;
+        max-width: 600px;
       }
 
       ha-card.compact-mode .custom-range-pickers {
-        gap: 8px;
         padding: 8px;
       }
 
@@ -1173,7 +1135,6 @@ export class DateRangeSelectorCard extends LitElement {
       }
 
       ha-card.in-header-mode .custom-range-pickers {
-        gap: 4px;
         padding: 4px;
       }
 
