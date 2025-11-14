@@ -66,10 +66,32 @@ const forceLoadHaDateInput = async (hass: HomeAssistant | undefined) => {
   } catch {
     // swallow
   }
+  if (customElements.get("ha-date-input")) return true;
+
+  // Heuristic 2: Try to load via ha-selector with a date selector which internally uses ha-date-input
+  try {
+    const selectorEl = document.createElement("ha-selector") as any;
+    (selectorEl as any).hass = hass;
+    (selectorEl as any).selector = { date: {} };
+    selectorEl.style.display = "none";
+    document.body.appendChild(selectorEl);
+    await new Promise((res) => setTimeout(res, 50));
+    if ((selectorEl as any).updateComplete) {
+      try {
+        await (selectorEl as any).updateComplete;
+      } catch {
+        void 0;
+      }
+    }
+    selectorEl.remove();
+  } catch {
+    void 0;
+  }
+
   return !!customElements.get("ha-date-input");
 };
 
-const VERSION = "v0.0.15";
+const VERSION = "v0.0.18";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c v${VERSION} `,
@@ -90,6 +112,7 @@ export class DateRangeSelectorCard extends LitElement {
   @state() private haDateInputReady: boolean =
     !!customElements.get("ha-date-input");
   @state() private haDateInputLoading: boolean = false;
+  @state() private haDateInputFailed: boolean = false;
 
   public static getConfigElement() {
     return document.createElement("date-range-selector-editor");
@@ -180,7 +203,11 @@ export class DateRangeSelectorCard extends LitElement {
     if (changedProperties.has("hass") && this.hass) {
       this._updateDatesFromEntities();
       // Retry loader once hass is available if not yet ready
-      if (!this.haDateInputReady && !this.haDateInputLoading) {
+      if (
+        !this.haDateInputReady &&
+        !this.haDateInputLoading &&
+        !this.haDateInputFailed
+      ) {
         this._initHaDateInput();
       }
     }
@@ -191,12 +218,23 @@ export class DateRangeSelectorCard extends LitElement {
    */
   private _initHaDateInput(): void {
     if (this.haDateInputReady || this.haDateInputLoading) return;
+    this.haDateInputFailed = false;
     this.haDateInputLoading = true;
     let attempts = 0;
     const maxAttempts = 8; // ~8 * 500ms = 4s
     const tryLoad = async () => {
       attempts++;
       const loaded = await forceLoadHaDateInput(this.hass);
+      try {
+        // eslint-disable-next-line no-console
+        console.debug(
+          "[date-range-selector] ha-date-input load attempt",
+          attempts,
+          loaded,
+        );
+      } catch {
+        void 0;
+      }
       if (loaded) {
         this.haDateInputReady = true;
         this.haDateInputLoading = false;
@@ -208,6 +246,13 @@ export class DateRangeSelectorCard extends LitElement {
       } else {
         // Give up; user can still interact with presets or re-open card later.
         this.haDateInputLoading = false;
+        this.haDateInputFailed = true;
+        try {
+          // eslint-disable-next-line no-console
+          console.warn("[date-range-selector] ha-date-input failed to load");
+        } catch {
+          void 0;
+        }
         this.requestUpdate();
       }
     };
@@ -761,7 +806,12 @@ export class DateRangeSelectorCard extends LitElement {
                       >Failed to load <code>ha-date-input</code>. Reload
                       dashboard or open an entities card containing an
                       <code>input_datetime</code>.
-                      <button @click=${() => this._initHaDateInput()}>
+                      <button
+                        @click=${() => {
+                          this.haDateInputFailed = false;
+                          this._initHaDateInput();
+                        }}
+                      >
                         Retry
                       </button></span
                     >`}
