@@ -91,10 +91,10 @@ const forceLoadHaDateInput = async (hass: HomeAssistant | undefined) => {
   return !!customElements.get("ha-date-input");
 };
 
-const VERSION = "v0.0.21";
+const VERSION = "v0.0.22";
 
 console.info(
-  `%c DATE-RANGE-SELECTOR-CARD %c v${VERSION} `,
+  `%c DATE-RANGE-SELECTOR-CARD %c ${VERSION} `,
   "color: white; background: #0084ff; font-weight: 700;",
   "color: #0084ff; background: white; font-weight: 700;",
 );
@@ -1117,6 +1117,7 @@ export class DateRangeSelectorCard extends LitElement {
         display: flex;
         justify-content: center;
         border-radius: 8px;
+        gap: 16px;
       }
 
       /* Only add padding and background when NOT in no-background mode */
@@ -1145,7 +1146,7 @@ export class DateRangeSelectorCard extends LitElement {
 
       .floating-button {
         position: fixed;
-        z-index: 1000;
+        z-index: 10;
         width: 56px;
         height: 56px;
         border-radius: 50%;
@@ -1210,7 +1211,7 @@ export class DateRangeSelectorCard extends LitElement {
         right: 0;
         bottom: 0;
         background: rgba(0, 0, 0, 0.5);
-        z-index: 1001;
+        z-index: 30;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1228,6 +1229,8 @@ export class DateRangeSelectorCard extends LitElement {
       }
 
       .floating-popup {
+        position: relative;
+        z-index: 31; /* above overlay, below HA dialogs */
         background: var(
           --ha-card-background,
           var(--card-background-color, white)
@@ -1309,6 +1312,10 @@ export class DateRangeSelectorCard extends LitElement {
       .popup-content .card-content {
         padding: 0;
         gap: 16px;
+      }
+
+      .popup-content .date-range-display {
+        padding: 0;
       }
 
       @media (max-width: 600px) {
