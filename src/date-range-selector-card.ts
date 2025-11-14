@@ -91,7 +91,7 @@ const forceLoadHaDateInput = async (hass: HomeAssistant | undefined) => {
   return !!customElements.get("ha-date-input");
 };
 
-const VERSION = "v0.0.25";
+const VERSION = "v0.0.26";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c ${VERSION} `,
@@ -113,8 +113,7 @@ export class DateRangeSelectorCard extends LitElement {
     !!customElements.get("ha-date-input");
   @state() private haDateInputLoading: boolean = false;
   @state() private haDateInputFailed: boolean = false;
-  @state() private _externalDialogOpen: boolean = false;
-  private _shouldRestoreFloatingPopup: boolean = false;
+  @state() private _hideForDialog: boolean = false;
   @state() private _popupRendered: boolean = false;
   private _popupCloseTimeout?: number;
   private _dialogObserver?: MutationObserver;
@@ -133,20 +132,8 @@ export class DateRangeSelectorCard extends LitElement {
 
   private _handleDialogPresenceChange(): void {
     const present = this._checkExternalDialogPresent();
-    if (present && !this._externalDialogOpen) {
-      this._externalDialogOpen = true;
-      if (this._popupRendered && this.showFloatingPopup) {
-        this._shouldRestoreFloatingPopup = true;
-        this._beginCloseFloatingPopup();
-      }
-    } else if (!present && this._externalDialogOpen) {
-      this._externalDialogOpen = false;
-      if (this._shouldRestoreFloatingPopup) {
-        setTimeout(() => {
-          this._openFloatingPopup();
-          this._shouldRestoreFloatingPopup = false;
-        }, 50);
-      }
+    if (present !== this._hideForDialog) {
+      this._hideForDialog = present;
     }
   }
 
@@ -173,41 +160,6 @@ export class DateRangeSelectorCard extends LitElement {
     }
     this._dialogObserver = undefined;
   }
-
-  private _onGlobalFocusIn = (e: FocusEvent) => {
-    try {
-      const path = (e as any).composedPath?.() || [];
-      const foundDialog = path.some(
-        (n: any) =>
-          !!n &&
-          n.tagName &&
-          (n.tagName === "HA-DIALOG-DATE-PICKER" || n.tagName === "HA-DIALOG"),
-      );
-
-      if (foundDialog) {
-        if (!this._externalDialogOpen) {
-          this._externalDialogOpen = true;
-          if (this._popupRendered && this.showFloatingPopup) {
-            this._shouldRestoreFloatingPopup = true;
-            this._beginCloseFloatingPopup();
-          }
-        }
-      } else {
-        if (this._externalDialogOpen) {
-          this._externalDialogOpen = false;
-          if (this._shouldRestoreFloatingPopup) {
-            // small timeout to allow dialog to finish closing
-            setTimeout(() => {
-              this._openFloatingPopup();
-              this._shouldRestoreFloatingPopup = false;
-            }, 50);
-          }
-        }
-      }
-    } catch {
-      // swallow
-    }
-  };
 
   public static getConfigElement() {
     return document.createElement("date-range-selector-editor");
@@ -290,16 +242,11 @@ export class DateRangeSelectorCard extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     this._initHaDateInput();
-    window.addEventListener("focusin", this._onGlobalFocusIn as EventListener);
     this._ensureDialogObserver();
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.removeEventListener(
-      "focusin",
-      this._onGlobalFocusIn as EventListener,
-    );
     this._disconnectDialogObserver();
   }
 
@@ -1023,7 +970,7 @@ export class DateRangeSelectorCard extends LitElement {
                 <div
                   class="floating-popup-overlay ${this.showFloatingPopup
                     ? "open"
-                    : ""}"
+                    : ""} ${this._hideForDialog ? "hidden-for-dialog" : ""}"
                   @click=${this._closeFloatingPopup}
                 >
                   <div
@@ -1364,6 +1311,11 @@ export class DateRangeSelectorCard extends LitElement {
       .floating-popup-overlay.open {
         opacity: 1;
         pointer-events: auto;
+      }
+
+      .floating-popup-overlay.hidden-for-dialog {
+        opacity: 0 !important;
+        pointer-events: none !important;
       }
 
       .floating-popup {
