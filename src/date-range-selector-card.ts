@@ -91,7 +91,7 @@ const forceLoadHaDateInput = async (hass: HomeAssistant | undefined) => {
   return !!customElements.get("ha-date-input");
 };
 
-const VERSION = "v0.0.27";
+const VERSION = "v0.0.28";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c ${VERSION} `,
@@ -117,6 +117,18 @@ export class DateRangeSelectorCard extends LitElement {
   @state() private _popupRendered: boolean = false;
   private _popupCloseTimeout?: number;
   private _dialogObserver?: MutationObserver;
+  private _lastDialogOpen?: boolean;
+
+  private _dbg(...args: any[]): void {
+    if (this.config?.debug_logging) {
+      try {
+        // eslint-disable-next-line no-console
+        console.debug("[date-range-selector]", ...args);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
 
   /** Simple check: if any HA dialog host exists in light DOM, consider a dialog open. */
   private _isExternalDialogOpen(): boolean {
@@ -140,6 +152,7 @@ export class DateRangeSelectorCard extends LitElement {
     const present = this._checkExternalDialogPresent();
     if (present !== this._hideForDialog) {
       this._hideForDialog = present;
+      this._dbg("dialog presence changed", { present });
     }
   }
 
@@ -211,8 +224,11 @@ export class DateRangeSelectorCard extends LitElement {
       floating_button_text: "",
       popup_title: "Date Range Selector",
       popup_icon: "",
+      debug_logging: false,
       ...config,
     };
+
+    this._dbg("setConfig", this.config);
 
     // Ensure at least one range mode is visible
     const visibleModes = this.config.visible_range_modes!;
@@ -662,22 +678,28 @@ export class DateRangeSelectorCard extends LitElement {
     requestAnimationFrame(() => {
       this.showFloatingPopup = true;
     });
+    this._dbg("_openFloatingPopup", { popupRendered: this._popupRendered });
   }
 
   private _beginCloseFloatingPopup(): void {
     // Start closing transition
     this.showFloatingPopup = false;
+    this._dbg("_beginCloseFloatingPopup");
     // After transition, remove from DOM
     if (this._popupCloseTimeout) window.clearTimeout(this._popupCloseTimeout);
     this._popupCloseTimeout = window.setTimeout(() => {
       this._popupRendered = false;
       this._popupCloseTimeout = undefined;
+      this._dbg("popup removed after close");
     }, 220);
   }
 
   private _toggleFloatingPopup(): void {
     if (this.showFloatingPopup) this._beginCloseFloatingPopup();
     else this._openFloatingPopup();
+    this._dbg("_toggleFloatingPopup", {
+      showFloatingPopup: this.showFloatingPopup,
+    });
   }
 
   private _closeFloatingPopup(): void {
@@ -750,6 +772,14 @@ export class DateRangeSelectorCard extends LitElement {
       this.config.floating_mode === true && !this._isEditMode();
     const hasHaDateInput = this.haDateInputReady;
     const dialogOpen = this._isExternalDialogOpen();
+    if (dialogOpen !== this._lastDialogOpen) {
+      this._dbg("render dialogOpen changed", {
+        dialogOpen,
+        showFloatingPopup: this.showFloatingPopup,
+        popupRendered: this._popupRendered,
+      });
+      this._lastDialogOpen = dialogOpen;
+    }
 
     // Render date display template
     const renderDateDisplay = () => {
