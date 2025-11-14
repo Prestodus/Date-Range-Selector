@@ -91,7 +91,7 @@ const forceLoadHaDateInput = async (hass: HomeAssistant | undefined) => {
   return !!customElements.get("ha-date-input");
 };
 
-const VERSION = "v0.0.22";
+const VERSION = "v0.0.23";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c ${VERSION} `,
@@ -898,25 +898,27 @@ export class DateRangeSelectorCard extends LitElement {
                     class="floating-popup ${cardClass}"
                     @click=${(e: Event) => e.stopPropagation()}
                   >
-                    <div class="popup-header">
-                      <div class="popup-header-content">
-                        ${this.config.popup_icon
-                          ? html`<ha-icon
-                              icon="${this.config.popup_icon}"
-                            ></ha-icon>`
-                          : ""}
-                        <h3>
-                          ${this.config.popup_title || "Date Range Selector"}
-                        </h3>
+                    <div class="floating-popup-inner">
+                      <div class="popup-header">
+                        <div class="popup-header-content">
+                          ${this.config.popup_icon
+                            ? html`<ha-icon
+                                icon="${this.config.popup_icon}"
+                              ></ha-icon>`
+                            : ""}
+                          <h3>
+                            ${this.config.popup_title || "Date Range Selector"}
+                          </h3>
+                        </div>
+                        <button
+                          class="close-button"
+                          @click=${this._closeFloatingPopup}
+                        >
+                          <ha-icon icon="mdi:close"></ha-icon>
+                        </button>
                       </div>
-                      <button
-                        class="close-button"
-                        @click=${this._closeFloatingPopup}
-                      >
-                        <ha-icon icon="mdi:close"></ha-icon>
-                      </button>
+                      <div class="popup-content">${renderMainContent()}</div>
                     </div>
-                    <div class="popup-content">${renderMainContent()}</div>
                   </div>
                 </div>
               `
@@ -1231,16 +1233,23 @@ export class DateRangeSelectorCard extends LitElement {
       .floating-popup {
         position: relative;
         z-index: 31; /* above overlay, below HA dialogs */
+        background: transparent;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .floating-popup-inner {
         background: var(
           --ha-card-background,
           var(--card-background-color, white)
         );
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        max-width: 600px;
-        width: 100%;
-        max-height: 90vh;
         overflow-y: auto;
+        max-height: 90vh;
         animation: slideUp 0.3s ease;
       }
 
