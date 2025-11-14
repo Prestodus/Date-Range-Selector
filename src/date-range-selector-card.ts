@@ -91,7 +91,7 @@ const forceLoadHaDateInput = async (hass: HomeAssistant | undefined) => {
   return !!customElements.get("ha-date-input");
 };
 
-const VERSION = "v0.0.20";
+const VERSION = "v0.0.21";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c v${VERSION} `,
@@ -895,7 +895,7 @@ export class DateRangeSelectorCard extends LitElement {
                   @click=${this._closeFloatingPopup}
                 >
                   <div
-                    class="floating-popup"
+                    class="floating-popup ${cardClass}"
                     @click=${(e: Event) => e.stopPropagation()}
                   >
                     <div class="popup-header">
@@ -1116,9 +1116,13 @@ export class DateRangeSelectorCard extends LitElement {
       .custom-range-pickers {
         display: flex;
         justify-content: center;
+        border-radius: 8px;
+      }
+
+      /* Only add padding and background when NOT in no-background mode */
+      ha-card:not(.no-background) .custom-range-pickers {
         padding: 16px;
         background: var(--secondary-background-color, #f5f5f5);
-        border-radius: 8px;
       }
 
       .custom-range-pickers ha-date-range-picker {
@@ -1126,12 +1130,8 @@ export class DateRangeSelectorCard extends LitElement {
         max-width: 600px;
       }
 
-      ha-card.compact-mode .custom-range-pickers {
+      ha-card.compact-mode:not(.no-background) .custom-range-pickers {
         padding: 8px;
-      }
-
-      ha-card.no-background .custom-range-pickers {
-        background: transparent;
       }
 
       ha-card.in-header-mode .custom-range-pickers {
@@ -1301,10 +1301,14 @@ export class DateRangeSelectorCard extends LitElement {
 
       .popup-content {
         padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
       }
 
       .popup-content .card-content {
         padding: 0;
+        gap: 16px;
       }
 
       @media (max-width: 600px) {
@@ -1331,6 +1335,23 @@ export class DateRangeSelectorCard extends LitElement {
         .floating-popup {
           max-height: 95vh;
           border-radius: 16px 16px 0 0;
+        }
+      }
+
+      /* Popup mode: respect no-background setting for custom-range-pickers */
+      .floating-popup.no-background .custom-range-pickers {
+        padding: 0;
+        background: transparent;
+      }
+
+      .floating-popup:not(.no-background) .custom-range-pickers {
+        padding: 16px;
+        background: var(--secondary-background-color, #f5f5f5);
+      }
+
+      @media (max-width: 600px) {
+        .floating-popup:not(.no-background) .custom-range-pickers {
+          padding: 8px;
         }
 
         .floating-popup-overlay {
