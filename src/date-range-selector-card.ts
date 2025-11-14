@@ -28,25 +28,6 @@ import {
 // Import the editor
 import "./editor";
 
-// Load HA components for ha-date-input without causing entity errors
-const loadHaComponents = async () => {
-  if (customElements.get("ha-date-input")) return;
-  const helpers = await (window as any).loadCardHelpers?.();
-  if (!helpers) return;
-  try {
-    // Using an entities card with no entities to load common components
-    const card = await helpers.createCardElement({
-      type: "entities",
-      entities: [],
-    });
-    if (card?.getConfigElement) {
-      await card.getConfigElement();
-    }
-  } catch {
-    // Silently fail if component loading fails
-  }
-};
-
 const VERSION = "v0.0.15";
 
 console.info(
@@ -65,7 +46,6 @@ export class DateRangeSelectorCard extends LitElement {
   @state() private showCustomPickers: boolean = false;
   @state() private isUpdating: boolean = false;
   @state() private showFloatingPopup: boolean = false;
-  private _datePickerDialog?: any;
 
   public static getConfigElement() {
     return document.createElement("date-range-selector-editor");
@@ -143,11 +123,6 @@ export class DateRangeSelectorCard extends LitElement {
 
   public getCardSize(): number {
     return 3;
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    loadHaComponents();
   }
 
   protected updated(changedProperties: PropertyValues): void {
@@ -474,81 +449,13 @@ export class DateRangeSelectorCard extends LitElement {
     }
   }
 
-  private _handleCustomStartChangeNative(e: Event): void {
-    const input = e.target as HTMLInputElement;
-    const value = input?.value;
-    if (value) {
-      const newStart = parseISO(value);
-      let newEnd = this.currentEndDate;
-      if (isAfter(newStart, this.currentEndDate)) {
-        newEnd = newStart;
-      }
+  private _handleDateRangeChange(e: CustomEvent): void {
+    const detail = e.detail as any;
+    if (detail.startDate && detail.endDate) {
+      const newStart = parseISO(detail.startDate);
+      const newEnd = parseISO(detail.endDate);
       this._setDateRange(newStart, newEnd);
     }
-  }
-
-  private _handleCustomEndChangeNative(e: Event): void {
-    const input = e.target as HTMLInputElement;
-    const value = input?.value;
-    if (value) {
-      const newEnd = parseISO(value);
-      this._setDateRange(this.currentStartDate, newEnd);
-    }
-  }
-
-  private _ensureDatePickerDialog(): boolean {
-    const dialogTag = "ha-dialog-date-picker";
-    const DialogCtor = customElements.get(dialogTag) as any;
-    if (!DialogCtor) return false;
-    if (!this._datePickerDialog) {
-      const el = document.createElement(dialogTag) as any;
-      el.hass = this.hass;
-      document.body.appendChild(el);
-      this._datePickerDialog = el;
-    } else if (!this._datePickerDialog.isConnected) {
-      document.body.appendChild(this._datePickerDialog);
-    }
-    return true;
-  }
-
-  private _openStartDateDialog(): void {
-    if (!this._ensureDatePickerDialog()) return;
-    const todayStr = format(new Date(), "yyyy-MM-dd");
-    const minStr =
-      typeof this.config.min_date === "string" ? this.config.min_date : "";
-    const maxStr = this.config.disable_future ? todayStr : "";
-    this._datePickerDialog.showDialog({
-      value: format(this.currentStartDate, "yyyy-MM-dd"),
-      min: minStr || undefined,
-      max: maxStr || undefined,
-      locale: this.hass?.locale,
-      canClear: false,
-      firstWeekday: 1,
-      onChange: (val: string | undefined) => {
-        if (!val) return;
-        // emulate ha-date-input event shape
-        this._handleCustomStartChange({ detail: { value: val } } as any);
-      },
-    });
-  }
-
-  private _openEndDateDialog(): void {
-    if (!this._ensureDatePickerDialog()) return;
-    const todayStr = format(new Date(), "yyyy-MM-dd");
-    const minStr = format(this.currentStartDate, "yyyy-MM-dd");
-    const maxStr = this.config.disable_future ? todayStr : "";
-    this._datePickerDialog.showDialog({
-      value: format(this.currentEndDate, "yyyy-MM-dd"),
-      min: minStr || undefined,
-      max: maxStr || undefined,
-      locale: this.hass?.locale,
-      canClear: false,
-      firstWeekday: 1,
-      onChange: (val: string | undefined) => {
-        if (!val) return;
-        this._handleCustomEndChange({ detail: { value: val } } as any);
-      },
-    });
   }
 
   private _getTodayButtonLabel(): string {
@@ -640,8 +547,6 @@ export class DateRangeSelectorCard extends LitElement {
     const useButtonGroup = this.config.use_button_group === true;
     const floatingMode =
       this.config.floating_mode === true && !this._isEditMode();
-    const hasHaDateInput = !!customElements.get("ha-date-input");
-    const hasHaDateDialog = !!customElements.get("ha-dialog-date-picker");
 
     // Render date display template
     const renderDateDisplay = () => {
@@ -771,100 +676,21 @@ export class DateRangeSelectorCard extends LitElement {
     const renderCustomPickers = () => {
       if (!this.showCustomPickers) return html``;
 
-      if (hasHaDateInput) {
-        return html`
-          <div class="custom-range-pickers">
-            <div class="picker-group">
-              <ha-date-input
-                .hass=${this.hass}
-                .locale=${this.hass.locale}
-                .value=${format(this.currentStartDate, "yyyy-MM-dd")}
-                .label=${"Start Date"}
-                @value-changed=${this._handleCustomStartChange}
-                .min=${typeof this.config.min_date === "string"
-                  ? this.config.min_date
-                  : ""}
-                .max=${this.config.disable_future
-                  ? format(new Date(), "yyyy-MM-dd")
-                  : ""}
-                .disabled=${this.isUpdating}
-              ></ha-date-input>
-            </div>
-            <div class="picker-group">
-              <ha-date-input
-                .hass=${this.hass}
-                .locale=${this.hass.locale}
-                .value=${format(this.currentEndDate, "yyyy-MM-dd")}
-                .label=${"End Date"}
-                @value-changed=${this._handleCustomEndChange}
-                .min=${format(this.currentStartDate, "yyyy-MM-dd")}
-                .max=${this.config.disable_future
-                  ? format(new Date(), "yyyy-MM-dd")
-                  : ""}
-                .disabled=${this.isUpdating}
-              ></ha-date-input>
-            </div>
-          </div>
-        `;
-      } else if (hasHaDateDialog) {
-        // Render inputs that open HA's date picker dialog for a native HA experience
-        return html`
-          <div class="custom-range-pickers">
-            <div class="picker-group">
-              <label>Start Date</label>
-              <button
-                class="dialog-input"
-                @click=${this._openStartDateDialog}
-                ?disabled=${this.isUpdating}
-              >
-                ${format(this.currentStartDate, "yyyy-MM-dd")}
-              </button>
-            </div>
-            <div class="picker-group">
-              <label>End Date</label>
-              <button
-                class="dialog-input"
-                @click=${this._openEndDateDialog}
-                ?disabled=${this.isUpdating}
-              >
-                ${format(this.currentEndDate, "yyyy-MM-dd")}
-              </button>
-            </div>
-          </div>
-        `;
-      }
-
-      // Fallback to native inputs if ha-date-input is not available
       return html`
         <div class="custom-range-pickers">
-          <div class="picker-group">
-            <label>Start Date</label>
-            <input
-              type="date"
-              .value=${format(this.currentStartDate, "yyyy-MM-dd")}
-              min=${typeof this.config.min_date === "string"
-                ? this.config.min_date
-                : ""}
-              max=${this.config.disable_future
-                ? format(new Date(), "yyyy-MM-dd")
-                : ""}
-              ?disabled=${this.isUpdating}
-              @change=${this._handleCustomStartChangeNative}
-            />
-          </div>
-          <div class="picker-group">
-            <label>End Date</label>
-            <input
-              type="date"
-              .value=${format(this.currentEndDate, "yyyy-MM-dd")}
-              min=${format(this.currentStartDate, "yyyy-MM-dd")}
-              max=${this.config.disable_future
-                ? format(new Date(), "yyyy-MM-dd")
-                : ""}
-              ?disabled=${this.isUpdating}
-              @change=${this._handleCustomEndChangeNative}
-            />
-          </div>
+          <ha-date-range-picker
+            .hass=${this.hass}
+            .startDate=${format(this.currentStartDate, "yyyy-MM-dd")}
+            .endDate=${format(this.currentEndDate, "yyyy-MM-dd")}
+            .min=${typeof this.config.min_date === "string"
+              ? this.config.min_date
+              : undefined}
+            .max=${this.config.disable_future
+              ? format(new Date(), "yyyy-MM-dd")
+              : undefined}
+            .disabled=${this.isUpdating}
+            @value-changed=${this._handleDateRangeChange}
+          ></ha-date-range-picker>
         </div>
       `;
     };
@@ -1127,57 +953,19 @@ export class DateRangeSelectorCard extends LitElement {
       }
 
       .custom-range-pickers {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
+        display: flex;
+        justify-content: center;
         padding: 16px;
         background: var(--secondary-background-color, #f5f5f5);
         border-radius: 8px;
       }
 
-      .picker-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .picker-group label {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--secondary-text-color);
-      }
-
-      .picker-group input[type="date"],
-      .picker-group ha-date-input {
-        padding: 10px;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 4px;
-        background: var(--card-background-color, white);
-        color: var(--primary-text-color);
-        font-size: 14px;
-        font-family: inherit;
-      }
-
-      .picker-group ha-date-input {
-        padding: 0;
-        border: none;
-      }
-
-      .dialog-input {
+      .custom-range-pickers ha-date-range-picker {
         width: 100%;
-        text-align: left;
-        padding: 10px;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 4px;
-        background: var(--card-background-color, white);
-        color: var(--primary-text-color);
-        font-size: 14px;
-        font-family: inherit;
-        cursor: pointer;
+        max-width: 600px;
       }
 
       ha-card.compact-mode .custom-range-pickers {
-        gap: 8px;
         padding: 8px;
       }
 
@@ -1186,7 +974,6 @@ export class DateRangeSelectorCard extends LitElement {
       }
 
       ha-card.in-header-mode .custom-range-pickers {
-        gap: 4px;
         padding: 4px;
       }
 
