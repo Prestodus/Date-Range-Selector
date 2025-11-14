@@ -91,7 +91,7 @@ const forceLoadHaDateInput = async (hass: HomeAssistant | undefined) => {
   return !!customElements.get("ha-date-input");
 };
 
-const VERSION = "v0.0.26";
+const VERSION = "v0.0.27";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c ${VERSION} `,
@@ -118,13 +118,19 @@ export class DateRangeSelectorCard extends LitElement {
   private _popupCloseTimeout?: number;
   private _dialogObserver?: MutationObserver;
 
+  /** Simple check: if any HA dialog host exists in light DOM, consider a dialog open. */
+  private _isExternalDialogOpen(): boolean {
+    try {
+      return !!document.querySelector("ha-dialog");
+    } catch {
+      return false;
+    }
+  }
+
   private _checkExternalDialogPresent(): boolean {
     try {
       // Detect HA dialogs that may overlap: date picker dialog or generic ha-dialog
-      return (
-        !!document.querySelector("ha-dialog-date-picker") ||
-        !!document.querySelector("ha-dialog")
-      );
+      return !!document.querySelector("ha-dialog");
     } catch {
       return false;
     }
@@ -743,6 +749,7 @@ export class DateRangeSelectorCard extends LitElement {
     const floatingMode =
       this.config.floating_mode === true && !this._isEditMode();
     const hasHaDateInput = this.haDateInputReady;
+    const dialogOpen = this._isExternalDialogOpen();
 
     // Render date display template
     const renderDateDisplay = () => {
@@ -965,7 +972,7 @@ export class DateRangeSelectorCard extends LitElement {
             ${text ? html`<span class="button-text">${text}</span>` : ""}
           </button>
 
-          ${this._popupRendered
+          ${this._popupRendered && !dialogOpen
             ? html`
                 <div
                   class="floating-popup-overlay ${this.showFloatingPopup
