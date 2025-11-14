@@ -58,7 +58,18 @@ export class PopupWrapperEditor extends LitElement {
 
     let newConfig: PopupWrapperCardConfig;
 
-    if (target.value === "" || target.value === undefined) {
+    // For specific text inputs, keep empty strings instead of deleting keys
+    const isText = target.type === "text";
+    const preserveEmpty =
+      isText &&
+      (configValue === "floating_button_text" || configValue === "popup_title");
+
+    if (target.value === undefined) {
+      newConfig = { ...this.config };
+      delete newConfig[configValue];
+    } else if (preserveEmpty && target.value === "") {
+      newConfig = { ...this.config, [configValue]: "" };
+    } else if (!isText && target.value === "") {
       newConfig = { ...this.config };
       delete newConfig[configValue];
     } else {
@@ -256,7 +267,7 @@ export class PopupWrapperEditor extends LitElement {
                   type="text"
                   id="floating_button_text"
                   .configValue=${"floating_button_text"}
-                  .value=${this.config.floating_button_text || ""}
+                  .value=${this.config.floating_button_text ?? ""}
                   @input=${this._valueChanged}
                   placeholder="Leave empty to show icon"
                 />

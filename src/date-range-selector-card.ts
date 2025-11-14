@@ -47,7 +47,7 @@ const loadHaComponents = async () => {
   }
 };
 
-const VERSION = "v0.0.13";
+const VERSION = "v0.0.15";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c v${VERSION} `,
@@ -65,6 +65,7 @@ export class DateRangeSelectorCard extends LitElement {
   @state() private showCustomPickers: boolean = false;
   @state() private isUpdating: boolean = false;
   @state() private showFloatingPopup: boolean = false;
+  private _datePickerDialog?: any;
 
   public static getConfigElement() {
     return document.createElement("date-range-selector-editor");
@@ -495,6 +496,61 @@ export class DateRangeSelectorCard extends LitElement {
     }
   }
 
+  private _ensureDatePickerDialog(): boolean {
+    const dialogTag = "ha-dialog-date-picker";
+    const DialogCtor = customElements.get(dialogTag) as any;
+    if (!DialogCtor) return false;
+    if (!this._datePickerDialog) {
+      const el = document.createElement(dialogTag) as any;
+      el.hass = this.hass;
+      document.body.appendChild(el);
+      this._datePickerDialog = el;
+    } else if (!this._datePickerDialog.isConnected) {
+      document.body.appendChild(this._datePickerDialog);
+    }
+    return true;
+  }
+
+  private _openStartDateDialog(): void {
+    if (!this._ensureDatePickerDialog()) return;
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    const minStr =
+      typeof this.config.min_date === "string" ? this.config.min_date : "";
+    const maxStr = this.config.disable_future ? todayStr : "";
+    this._datePickerDialog.showDialog({
+      value: format(this.currentStartDate, "yyyy-MM-dd"),
+      min: minStr || undefined,
+      max: maxStr || undefined,
+      locale: this.hass?.locale,
+      canClear: false,
+      firstWeekday: 1,
+      onChange: (val: string | undefined) => {
+        if (!val) return;
+        // emulate ha-date-input event shape
+        this._handleCustomStartChange({ detail: { value: val } } as any);
+      },
+    });
+  }
+
+  private _openEndDateDialog(): void {
+    if (!this._ensureDatePickerDialog()) return;
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    const minStr = format(this.currentStartDate, "yyyy-MM-dd");
+    const maxStr = this.config.disable_future ? todayStr : "";
+    this._datePickerDialog.showDialog({
+      value: format(this.currentEndDate, "yyyy-MM-dd"),
+      min: minStr || undefined,
+      max: maxStr || undefined,
+      locale: this.hass?.locale,
+      canClear: false,
+      firstWeekday: 1,
+      onChange: (val: string | undefined) => {
+        if (!val) return;
+        this._handleCustomEndChange({ detail: { value: val } } as any);
+      },
+    });
+  }
+
   private _getTodayButtonLabel(): string {
     switch (this.selectedPreset) {
       case "day":
@@ -585,6 +641,7 @@ export class DateRangeSelectorCard extends LitElement {
     const floatingMode =
       this.config.floating_mode === true && !this._isEditMode();
     const hasHaDateInput = !!customElements.get("ha-date-input");
+    const hasHaDateDialog = !!customElements.get("ha-dialog-date-picker");
 
     // Render date display template
     const renderDateDisplay = () => {
@@ -724,7 +781,9 @@ export class DateRangeSelectorCard extends LitElement {
                 .value=${format(this.currentStartDate, "yyyy-MM-dd")}
                 .label=${"Start Date"}
                 @value-changed=${this._handleCustomStartChange}
-                .min=${this.config.min_date ?? ""}
+                .min=${typeof this.config.min_date === "string"
+                  ? this.config.min_date
+                  : ""}
                 .max=${this.config.disable_future
                   ? format(new Date(), "yyyy-MM-dd")
                   : ""}
@@ -747,6 +806,32 @@ export class DateRangeSelectorCard extends LitElement {
             </div>
           </div>
         `;
+      } else if (hasHaDateDialog) {
+        // Render inputs that open HA's date picker dialog for a native HA experience
+        return html`
+          <div class="custom-range-pickers">
+            <div class="picker-group">
+              <label>Start Date</label>
+              <button
+                class="dialog-input"
+                @click=${this._openStartDateDialog}
+                ?disabled=${this.isUpdating}
+              >
+                ${format(this.currentStartDate, "yyyy-MM-dd")}
+              </button>
+            </div>
+            <div class="picker-group">
+              <label>End Date</label>
+              <button
+                class="dialog-input"
+                @click=${this._openEndDateDialog}
+                ?disabled=${this.isUpdating}
+              >
+                ${format(this.currentEndDate, "yyyy-MM-dd")}
+              </button>
+            </div>
+          </div>
+        `;
       }
 
       // Fallback to native inputs if ha-date-input is not available
@@ -757,7 +842,9 @@ export class DateRangeSelectorCard extends LitElement {
             <input
               type="date"
               .value=${format(this.currentStartDate, "yyyy-MM-dd")}
-              min=${this.config.min_date ?? ""}
+              min=${typeof this.config.min_date === "string"
+                ? this.config.min_date
+                : ""}
               max=${this.config.disable_future
                 ? format(new Date(), "yyyy-MM-dd")
                 : ""}
@@ -1074,6 +1161,19 @@ export class DateRangeSelectorCard extends LitElement {
       .picker-group ha-date-input {
         padding: 0;
         border: none;
+      }
+
+      .dialog-input {
+        width: 100%;
+        text-align: left;
+        padding: 10px;
+        border: 1px solid var(--divider-color, #e0e0e0);
+        border-radius: 4px;
+        background: var(--card-background-color, white);
+        color: var(--primary-text-color);
+        font-size: 14px;
+        font-family: inherit;
+        cursor: pointer;
       }
 
       ha-card.compact-mode .custom-range-pickers {
