@@ -91,7 +91,7 @@ const forceLoadHaDateInput = async (hass: HomeAssistant | undefined) => {
   return !!customElements.get("ha-date-input");
 };
 
-const VERSION = "v0.0.23";
+const VERSION = "v0.0.24";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c ${VERSION} `,
@@ -113,6 +113,45 @@ export class DateRangeSelectorCard extends LitElement {
     !!customElements.get("ha-date-input");
   @state() private haDateInputLoading: boolean = false;
   @state() private haDateInputFailed: boolean = false;
+  @state() private _externalDialogOpen: boolean = false;
+  private _shouldRestoreFloatingPopup: boolean = false;
+  @state() private _popupRendered: boolean = false;
+  private _popupCloseTimeout?: number;
+
+  private _onGlobalFocusIn = (e: FocusEvent) => {
+    try {
+      const path = (e as any).composedPath?.() || [];
+      const foundDialog = path.some(
+        (n: any) =>
+          !!n &&
+          n.tagName &&
+          (n.tagName === "HA-DIALOG-DATE-PICKER" || n.tagName === "HA-DIALOG"),
+      );
+
+      if (foundDialog) {
+        if (!this._externalDialogOpen) {
+          this._externalDialogOpen = true;
+          if (this.showFloatingPopup) {
+            this._shouldRestoreFloatingPopup = true;
+            this.showFloatingPopup = false;
+          }
+        }
+      } else {
+        if (this._externalDialogOpen) {
+          this._externalDialogOpen = false;
+          if (this._shouldRestoreFloatingPopup) {
+            // small timeout to allow dialog to finish closing
+            setTimeout(() => {
+              this.showFloatingPopup = true;
+              this._shouldRestoreFloatingPopup = false;
+            }, 50);
+          }
+        }
+      }
+    } catch {
+      // swallow
+    }
+  };
 
   public static getConfigElement() {
     return document.createElement("date-range-selector-editor");
@@ -195,6 +234,15 @@ export class DateRangeSelectorCard extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     this._initHaDateInput();
+    window.addEventListener("focusin", this._onGlobalFocusIn as EventListener);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.removeEventListener(
+      "focusin",
+      this._onGlobalFocusIn as EventListener,
+    );
   }
 
   protected updated(changedProperties: PropertyValues): void {
@@ -593,12 +641,36 @@ export class DateRangeSelectorCard extends LitElement {
     }
   }
 
+  private _openFloatingPopup(): void {
+    if (this._popupCloseTimeout) {
+      window.clearTimeout(this._popupCloseTimeout);
+      this._popupCloseTimeout = undefined;
+    }
+    if (!this._popupRendered) this._popupRendered = true;
+    // Ensure class change happens after render for transition
+    requestAnimationFrame(() => {
+      this.showFloatingPopup = true;
+    });
+  }
+
+  private _beginCloseFloatingPopup(): void {
+    // Start closing transition
+    this.showFloatingPopup = false;
+    // After transition, remove from DOM
+    if (this._popupCloseTimeout) window.clearTimeout(this._popupCloseTimeout);
+    this._popupCloseTimeout = window.setTimeout(() => {
+      this._popupRendered = false;
+      this._popupCloseTimeout = undefined;
+    }, 220);
+  }
+
   private _toggleFloatingPopup(): void {
-    this.showFloatingPopup = !this.showFloatingPopup;
+    if (this.showFloatingPopup) this._beginCloseFloatingPopup();
+    else this._openFloatingPopup();
   }
 
   private _closeFloatingPopup(): void {
-    this.showFloatingPopup = false;
+    this._beginCloseFloatingPopup();
   }
 
   private _isTodayRangeActive(): boolean {
@@ -888,17 +960,25 @@ export class DateRangeSelectorCard extends LitElement {
             ${text ? html`<span class="button-text">${text}</span>` : ""}
           </button>
 
-          ${this.showFloatingPopup
+          ${this._popupRendered
             ? html`
                 <div
-                  class="floating-popup-overlay"
+                  class="floating-popup-overlay ${this.showFloatingPopup
+                    ? "open"
+                    : ""}"
                   @click=${this._closeFloatingPopup}
                 >
                   <div
-                    class="floating-popup ${cardClass}"
+                    class="floating-popup ${cardClass} ${this.showFloatingPopup
+                      ? "open"
+                      : ""}"
                     @click=${(e: Event) => e.stopPropagation()}
                   >
-                    <div class="floating-popup-inner">
+                    <div
+                      class="floating-popup-inner ${this.showFloatingPopup
+                        ? "open"
+                        : ""}"
+                    >
                       <div class="popup-header">
                         <div class="popup-header-content">
                           ${this.config.popup_icon
@@ -1218,16 +1298,14 @@ export class DateRangeSelectorCard extends LitElement {
         align-items: center;
         justify-content: center;
         padding: 16px;
-        animation: fadeIn 0.2s ease;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease;
       }
 
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
+      .floating-popup-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
       }
 
       .floating-popup {
@@ -1250,18 +1328,16 @@ export class DateRangeSelectorCard extends LitElement {
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         overflow-y: auto;
         max-height: 90vh;
-        animation: slideUp 0.3s ease;
+        transform: translateY(12px);
+        opacity: 0;
+        transition:
+          transform 0.22s ease,
+          opacity 0.18s ease;
       }
 
-      @keyframes slideUp {
-        from {
-          transform: translateY(20px);
-          opacity: 0;
-        }
-        to {
-          transform: translateY(0);
-          opacity: 1;
-        }
+      .floating-popup-inner.open {
+        transform: translateY(0);
+        opacity: 1;
       }
 
       .popup-header {
