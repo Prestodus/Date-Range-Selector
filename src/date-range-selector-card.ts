@@ -91,7 +91,7 @@ const forceLoadHaDateInput = async (hass: HomeAssistant | undefined) => {
   return !!customElements.get("ha-date-input");
 };
 
-const VERSION = "v0.0.18";
+const VERSION = "v0.0.19";
 
 console.info(
   `%c DATE-RANGE-SELECTOR-CARD %c v${VERSION} `,
